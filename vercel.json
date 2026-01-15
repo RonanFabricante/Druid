@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/Geneco.html"
+    },
+    {
+      "source": "/index.html",
+      "destination": "/Geneco.html"
+    }
+  ]
+}

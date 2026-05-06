@@ -1,46 +1,41 @@
-# Geneco Web Project
+# Smart Profile Form (GPT Auto-Fill)
 
-A modern, responsive web application built with HTML, CSS, and JavaScript.
+Modern 5-question form with:
+- Name
+- Email
+- DOB (calendar/date picker)
+- Gender (radio)
+- Relationship status (radio)
 
-## Project Structure
+It uses **gpt-4o-mini** on the backend to parse conversation text and auto-fill form fields.
+It also supports **DRUID realtime autofill** from chatbot activity messages.
 
-```
-Druid/
-├── Geneco.html          # Main HTML page
-├── css/
-│   └── styles.css      # Stylesheet
-├── js/
-│   └── main.js         # JavaScript functionality
-├── assets/             # Images and other assets (optional)
-└── README.md           # Project documentation
-```
+## Setup
 
-## Features
+1. Install dependencies:
+   npm install
 
-- **Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices
-- **Modern UI**: Clean and professional interface with smooth animations
-- **Smooth Scrolling**: Enhanced navigation experience
-- **Contact Form**: Interactive contact form with validation
-- **Semantic HTML**: Well-structured markup for better SEO and accessibility
+2. Create `.env` from `.env.example` and add:
+   GPT_API_URL=https://druidservicegateway.comm.eu.druidplatform.com/openai/deployments/gpt-4o-mini/chat/completions?api-version=2024-06-01
+   GPT_BEARER_TOKEN=your_gpt_token
+   DRUID_CHAT_BEARER_TOKEN=optional_fallback_token
 
-## Getting Started
+3. Run:
+   npm start
 
-1. Open `Geneco.html` in your web browser
-2. No build process required - it's ready to use!
+4. Open:
+   http://localhost:3000
 
-## Customization
+## How It Works
 
-- **Colors**: Modify CSS variables in `css/styles.css` (root selector)
-- **Content**: Edit the HTML content in `Geneco.html`
-- **Functionality**: Add or modify JavaScript in `js/main.js`
+- Chatbot activities are monitored and parsed in realtime.
+- Server calls your configured GPT endpoint (`gpt-4o-mini`) to extract known fields as JSON.
+- Form fields update automatically when values are detected.
 
-## Browser Support
+## DRUID Realtime Autofill
 
-- Chrome (latest)
-- Firefox (latest)
-- Safari (latest)
-- Edge (latest)
-
-## License
-
-This project is open source and available for personal and commercial use.
+1. Frontend captures DRUID bearer token and conversation id directly from live network requests (fetch/XHR).
+2. Backend calls `AuthorizeAnonymousAsync` (or uses captured id) to resolve active conversation session.
+3. It requests `https://directline.botframework.com/v3/directline/conversations/{conversationId}/activities`.
+4. New activities are sent to GPT extraction logic.
+5. The frontend applies returned values directly to form fields in realtime.

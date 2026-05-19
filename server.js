@@ -22,49 +22,99 @@ const DIRECTLINE_ACTIVITIES_BASE_URL =
   "https://directline.botframework.com/v3/directline/conversations";
 const DRUID_CHAT_BEARER_TOKEN = process.env.DRUID_CHAT_BEARER_TOKEN || "";
 const TRANSCRIPT_CONTEXT_LINES = Number(process.env.TRANSCRIPT_CONTEXT_LINES || 20);
-const CREDIT_CARD_OPTIONS = [
+const WORK_ARRANGEMENT_OPTIONS = [
   {
-    value: "low-rate-mastercard",
+    value: "fully remote",
     aliases: [
-      "latitude low rate mastercard",
-      "low rate mastercard",
-      "low rate card",
-      "low rate",
-      "first card",
-      "1st card",
-      "card 1",
-      "card one"
+      "fully remote",
+      "full remote",
+      "remote only",
+      "100% remote",
+      "completely remote",
+      "work from home full time",
+      "wfh full time",
+      "remote work",
+      "first option",
+      "1st option",
+      "option 1",
+      "option one"
     ]
   },
   {
-    value: "go-mastercard",
+    value: "hybrid",
     aliases: [
-      "latitude go mastercard",
-      "go mastercard",
-      "latitude go",
-      "go card",
-      "second card",
-      "2nd card",
-      "card 2",
-      "card two"
+      "hybrid",
+      "hybrid work",
+      "hybrid working",
+      "part remote part office",
+      "mix of home and office",
+      "some days remote",
+      "second option",
+      "2nd option",
+      "option 2",
+      "option two"
     ]
   },
   {
-    value: "28-global-platinum-mastercard",
+    value: "mostly office based",
     aliases: [
-      "latitude 28 platinum mastercard",
-      "28 global platinum mastercard",
-      "28 degree global platinum mastercard",
-      "28° global platinum mastercard",
-      "latitude 28 global platinum mastercard",
-      "global platinum mastercard",
-      "28 degree card",
-      "28 card",
-      "platinum card",
-      "third card",
-      "3rd card",
-      "card 3",
-      "card three"
+      "mostly office based",
+      "mostly in office",
+      "mainly office",
+      "primarily office",
+      "office based",
+      "mostly office",
+      "third option",
+      "3rd option",
+      "option 3",
+      "option three"
+    ]
+  },
+  {
+    value: "temporary work from home",
+    aliases: [
+      "temporary work from home",
+      "temporary wfh",
+      "temp wfh",
+      "temporary remote",
+      "short term remote",
+      "temporary home working",
+      "fourth option",
+      "4th option",
+      "option 4",
+      "option four"
+    ]
+  },
+  {
+    value: "internaional remote work",
+    aliases: [
+      "internaional remote work",
+      "international remote",
+      "remote from abroad",
+      "overseas remote",
+      "working internationally",
+      "remote from another country",
+      "global remote",
+      "fifth option",
+      "5th option",
+      "option 5",
+      "option five"
+    ]
+  },
+  {
+    value: "flexible hours only",
+    aliases: [
+      "flexible hours only",
+      "flexible hours",
+      "flexi hours",
+      "flexitime",
+      "flexible working hours",
+      "flex time",
+      "flexible schedule",
+      "sixth option",
+      "6th option",
+      "option 6",
+      "option six"
     ]
   }
 ];
@@ -443,20 +493,12 @@ function normalizeRelationshipStatus(value) {
   return allowed.has(normalized) ? normalized : null;
 }
 
-function normalizeCreditCard(value) {
+function normalizeWorkArrangement(value) {
   if (typeof value !== "string") return null;
   const raw = value.trim().toLowerCase();
   if (!raw) return null;
 
-  const legacyValueMap = {
-    "latitude-low-rate-mastercard": "low-rate-mastercard",
-    "latitude-go-mastercard": "go-mastercard",
-    "latitude-28-global-platinum-mastercard": "28-global-platinum-mastercard",
-    "latitude-28-platinum-mastercard": "28-global-platinum-mastercard"
-  };
-  if (legacyValueMap[raw]) return legacyValueMap[raw];
-
-  const candidates = buildCreditCardCandidates();
+  const candidates = buildWorkArrangementCandidates();
 
   const direct = candidates.find((candidate) => candidate.keys.has(raw));
   if (direct) return direct.value;
@@ -467,7 +509,7 @@ function normalizeCreditCard(value) {
   const normalizedDirect = candidates.find((candidate) => candidate.keys.has(normalized));
   if (normalizedDirect) return normalizedDirect.value;
 
-  const ordinalIndex = parseOrdinalCardIndex(normalized);
+  const ordinalIndex = parseOrdinalOptionIndex(normalized);
   if (ordinalIndex !== null && candidates[ordinalIndex]) {
     return candidates[ordinalIndex].value;
   }
@@ -483,8 +525,8 @@ function normalizeCreditCard(value) {
   return null;
 }
 
-function buildCreditCardCandidates() {
-  return CREDIT_CARD_OPTIONS.map((option) => {
+function buildWorkArrangementCandidates() {
+  return WORK_ARRANGEMENT_OPTIONS.map((option) => {
     const keys = new Set();
     const addKey = (input) => {
       const normalized = normalizeLookupText(input);
@@ -492,8 +534,6 @@ function buildCreditCardCandidates() {
     };
 
     addKey(option.value);
-    addKey(option.value.replace(/-/g, " "));
-    addKey(option.value.replace(/^latitude-/, "").replace(/-/g, " "));
     for (const alias of option.aliases || []) addKey(alias);
 
     return {
@@ -503,12 +543,12 @@ function buildCreditCardCandidates() {
   });
 }
 
-function parseOrdinalCardIndex(normalizedText) {
+function parseOrdinalOptionIndex(normalizedText) {
   const match = normalizedText.match(
-    /\b(1|one|first|1st|2|two|second|2nd|3|three|third|3rd|4|four|fourth|4th|5|five|fifth|5th)\b/
+    /\b(1|one|first|1st|2|two|second|2nd|3|three|third|3rd|4|four|fourth|4th|5|five|fifth|5th|6|six|sixth|6th)\b/
   );
   if (!match?.[1]) return null;
-  if (!/\b(card|credit|option)\b/.test(normalizedText) && !/\bgo with\b/.test(normalizedText)) {
+  if (!/\b(option|arrangement|choice)\b/.test(normalizedText) && !/\bgo with\b/.test(normalizedText)) {
     return null;
   }
 
@@ -533,7 +573,11 @@ function parseOrdinalCardIndex(normalizedText) {
     "5": 4,
     five: 4,
     fifth: 4,
-    "5th": 4
+    "5th": 4,
+    "6": 5,
+    six: 5,
+    sixth: 5,
+    "6th": 5
   };
 
   return Object.prototype.hasOwnProperty.call(indexMap, token) ? indexMap[token] : null;
@@ -573,7 +617,7 @@ function normalizeFormState(form) {
     dob: normalizeDate(form?.dob),
     gender: normalizeGender(form?.gender),
     relationshipStatus: normalizeRelationshipStatus(form?.relationshipStatus),
-    creditCard: normalizeCreditCard(form?.creditCard)
+    workArrangement: normalizeWorkArrangement(form?.workArrangement)
   };
 }
 
@@ -584,7 +628,7 @@ function mergeFormState(currentForm, patchForm) {
     dob: patchForm?.dob || currentForm?.dob || null,
     gender: patchForm?.gender || currentForm?.gender || null,
     relationshipStatus: patchForm?.relationshipStatus || currentForm?.relationshipStatus || null,
-    creditCard: patchForm?.creditCard || currentForm?.creditCard || null
+    workArrangement: patchForm?.workArrangement || currentForm?.workArrangement || null
   };
 }
 
@@ -595,7 +639,7 @@ function hasAnyField(form) {
       form?.dob ||
       form?.gender ||
       form?.relationshipStatus ||
-      form?.creditCard
+      form?.workArrangement
   );
 }
 
@@ -608,7 +652,7 @@ From the provided conversation payload, extract ONLY these fields if explicitly 
 - dob (string in YYYY-MM-DD format)
 - gender (one of: male, female, non-binary, prefer-not-to-say)
 - relationshipStatus (one of: single, married, in-a-relationship, divorced, widowed, prefer-not-to-say)
-- creditCard (one of: low-rate-mastercard, go-mastercard, 28-global-platinum-mastercard)
+- workArrangement (one of: fully remote, hybrid, mostly office based, temporary work from home, internaional remote work, flexible hours only)
 
 Rules:
 1) Return strict JSON object only.
@@ -620,7 +664,7 @@ Rules:
 7) If both bot and user messages are present, use user messages as the source of truth.
 8) For name, return only the person's name value (2-5 words), never include intent phrases like "my name is", "I am", or extra sentence text.
 9) If message says "my name is abhijeet kumar", output name as "Abhijeet Kumar" only.
-10) For creditCard, map user preference from full name, short name, or ordinal phrasing (like "first card", "go with second", "go card") to the exact enum.
+10) For workArrangement, map user preference from full name, short name, or ordinal phrasing (like "first option", "go with second", "hybrid") to the exact enum.
 `;
 
   const userPrompt = JSON.stringify({
@@ -632,7 +676,7 @@ Rules:
       dob: null,
       gender: null,
       relationshipStatus: null,
-      creditCard: null
+      workArrangement: null
     }
   });
 
@@ -1344,9 +1388,9 @@ function heuristicExtractFieldsFromActivities(activities, currentForm) {
   }
 
   for (const text of userMessages) {
-    const cardChoice = normalizeCreditCard(text);
-    if (cardChoice) {
-      merged.creditCard = cardChoice;
+    const arrangementChoice = normalizeWorkArrangement(text);
+    if (arrangementChoice) {
+      merged.workArrangement = arrangementChoice;
     }
   }
 

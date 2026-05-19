@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Druid</title>
+    <link rel="icon" type="image/png" href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQsqXR57vGEZqBmh5sv55gyElCgpUYMDoe0EQ&s" />
+    <link rel="stylesheet" href="./styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
+  </head>
+  <body>
+    <main class="kmart-page">
+      <section class="kmart-card" aria-label="Create account form">
+        <div class="kmart-logo" aria-label="Kmart logo">
+          <span class="kmart-k">K</span>
+          <span class="kmart-word">mart</span>
+        </div>
+
+        <h1>Create account</h1>
+        <p class="kmart-subtitle">
+          Sign up for faster checkout, order tracking, wishlist saving, and automatic Flybuys points—seamlessly synced with the Kmart app!
+        </p>
+
+        <form id="profileForm" class="kmart-form">
+          <div class="kmart-field">
+            <input id="email" name="email" type="email" placeholder=" " autocomplete="email" required />
+            <label for="email">Email address*</label>
+          </div>
+
+          <div class="kmart-field password-field">
+            <input id="password" name="password" type="password" placeholder=" " autocomplete="new-password" required />
+            <label for="password">Password*</label>
+            <button type="button" class="password-toggle" aria-label="Show password">
+              <i class="fa-regular fa-eye"></i>
+            </button>
+          </div>
+
+          <div class="kmart-field">
+            <input id="firstName" name="firstName" type="text" placeholder=" " autocomplete="given-name" />
+            <label for="firstName">First name (optional)</label>
+          </div>
+
+          <div class="kmart-field">
+            <input id="lastName" name="lastName" type="text" placeholder=" " autocomplete="family-name" />
+            <label for="lastName">Last name (optional)</label>
+          </div>
+
+          <label class="kmart-checkbox">
+            <input type="checkbox" id="kmailSignup" name="kmailSignup" />
+            <span>Sign up to Kmail</span>
+          </label>
+
+          <p class="kmart-helper">
+            Be the first to hear about our new launches and latest offers.
+          </p>
+
+          <button type="submit" class="kmart-submit">Create account</button>
+        </form>
+      </section>
+    </main>
+
+    <style>
+      :root {
+        --kmart-red: #e4002b;
+        --kmart-blue: #0072ce;
+        --kmart-navy: #071b3a;
+        --kmart-text: #111827;
+        --kmart-muted: #5c6470;
+        --kmart-border: #c8ccd2;
+        --kmart-bg: #ffffff;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: Arial, Helvetica, sans-serif;
+        color: var(--kmart-text);
+        background: var(--kmart-bg);
+      }
+
+      .kmart-page {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 32px 16px 56px;
+      }
+
+      .kmart-card {
+        width: 100%;
+        max-width: 520px;
+        text-align: center;
+      }
+
+      .kmart-logo {
+        position: relative;
+        display: inline-flex;
+        align-items: flex-start;
+        justify-content: center;
+        width: 154px;
+        height: 54px;
+        margin-bottom: 26px;
+        color: var(--kmart-red);
+        font-weight: 900;
+        line-height: 0.8;
+      }
+
+      .kmart-k {
+        font-size: 74px;
+        font-style: italic;
+        letter-spacing: -9px;
+        transform: skewX(-14deg);
+      }
+
+      .kmart-word {
+        position: absolute;
+        top: 14px;
+        right: 16px;
+        color: var(--kmart-blue);
+        font-size: 16px;
+        font-weight: 800;
+        font-style: italic;
+        transform: rotate(-3deg);
+      }
+
+      .kmart-card h1 {
+        margin: 0 0 24px;
+        font-size: 40px;
+        line-height: 1.1;
+        font-weight: 800;
+        letter-spacing: -1.2px;
+        color: var(--kmart-navy);
+      }
+
+      .kmart-subtitle {
+        max-width: 470px;
+        margin: 0 auto 72px;
+        font-size: 24px;
+        line-height: 1.32;
+        color: #050816;
+      }
+
+      .kmart-form {
+        display: flex;
+        flex-direction: column;
+        gap: 36px;
+        text-align: left;
+      }
+
+      .kmart-field {
+        position: relative;
+      }
+
+      .kmart-field input {
+        width: 100%;
+        height: 80px;
+        padding: 22px 64px 12px 32px;
+        border: 1px solid var(--kmart-border);
+        border-radius: 4px;
+        background: #fff;
+        color: var(--kmart-text);
+        font-size: 24px;
+        outline: none;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .kmart-field input:focus {
+        border-color: var(--kmart-navy);
+        box-shadow: 0 0 0 2px rgba(7, 27, 58, 0.08);
+      }
+
+      .kmart-field label {
+        position: absolute;
+        left: 24px;
+        top: -15px;
+        padding: 0 8px;
+        background: #fff;
+        color: var(--kmart-muted);
+        font-size: 24px;
+        line-height: 1;
+        pointer-events: none;
+      }
+
+      .kmart-field input:placeholder-shown + label {
+        top: 27px;
+        left: 32px;
+        padding: 0;
+        font-size: 24px;
+        background: transparent;
+      }
+
+      .kmart-field input:focus + label,
+      .kmart-field input:not(:placeholder-shown) + label {
+        top: -15px;
+        left: 24px;
+        padding: 0 8px;
+        background: #fff;
+        font-size: 24px;
+      }
+
+      .password-field input {
+        padding-right: 78px;
+      }
+
+      .password-toggle {
+        position: absolute;
+        top: 50%;
+        right: 20px;
+        width: 44px;
+        height: 44px;
+        transform: translateY(-50%);
+        border: 0;
+        background: transparent;
+        color: #5c6470;
+        font-size: 24px;
+        cursor: pointer;
+      }
+
+      .kmart-checkbox {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 6px;
+        font-size: 18px;
+        color: #050816;
+      }
+
+      .kmart-checkbox input {
+        width: 31px;
+        height: 31px;
+        margin: 0;
+        accent-color: var(--kmart-navy);
+      }
+
+      .kmart-helper {
+        margin: -24px 0 0;
+        font-size: 18px;
+        line-height: 1.4;
+        color: #050816;
+      }
+
+      .kmart-submit {
+        width: 100%;
+        min-height: 58px;
+        margin-top: 4px;
+        border: 0;
+        border-radius: 4px;
+        background: var(--kmart-navy);
+        color: #fff;
+        font-size: 20px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      @media (max-width: 560px) {
+        .kmart-page {
+          padding-top: 28px;
+        }
+
+        .kmart-card h1 {
+          font-size: 36px;
+        }
+
+        .kmart-subtitle {
+          margin-bottom: 56px;
+          font-size: 22px;
+        }
+
+        .kmart-field input {
+          height: 78px;
+          font-size: 23px;
+        }
+      }
+    </style>
+    <script defer src="./app.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const passwordInput = document.getElementById("password");
+        const toggle = document.querySelector(".password-toggle");
+        if (!passwordInput || !toggle) return;
+
+        toggle.addEventListener("click", () => {
+          const isPassword = passwordInput.type === "password";
+          passwordInput.type = isPassword ? "text" : "password";
+          toggle.setAttribute("aria-label", isPassword ? "Hide password" : "Show password");
+          const icon = toggle.querySelector("i");
+          if (icon) {
+            icon.className = isPassword ? "fa-regular fa-eye-slash" : "fa-regular fa-eye";
+          }
+        });
+      });
+    </script>
+    <!--script
+      defer
+      type="text/javascript"
+      src="https://Agents.community.druidplatform.com/v2/druid_webchat_v2_load.js?botId=47371448-a170-4de9-cbac-08de9ed49c21&baseUrl=https%3A%2F%2Fdruidapi.comm.eu.druidplatform.com"
+    ></script-->
+	<script
+      defer
+      type="text/javascript"
+      src="https://silverchain-poc.au.druidplatform.com/v2/druid_webchat_v2_load.js?botId=3335a610-a031-4830-97ca-08de5650198e&baseUrl=https%3A%2F%2Fdruidapi.au.druidplatform.com"
+    ></script>
+	
+  </body>
+</html>

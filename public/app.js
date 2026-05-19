@@ -78,7 +78,7 @@ async function runAutoFillSync() {
 }
 
 function shouldStopAutofillSync() {
-  return Boolean(getCheckedValue("creditCard"));
+  return Boolean(getCheckedValue("workArrangement"));
 }
 
 function installNetworkTokenCapture() {
@@ -270,7 +270,7 @@ function getCurrentFormState() {
     dob: formFields.dob.value || null,
     gender: getCheckedValue("gender"),
     relationshipStatus: getCheckedValue("relationshipStatus"),
-    creditCard: getCheckedValue("creditCard")
+    workArrangement: getCheckedValue("workArrangement")
   };
 }
 
@@ -291,34 +291,36 @@ function applyExtractedFields(extracted) {
     if (relationInput) relationInput.checked = true;
   }
 
-  if (extracted.creditCard) {
-    const resolvedCreditCard = resolveCreditCardValue(extracted.creditCard);
-    const creditCardInput = document.querySelector(
-      `input[name="creditCard"][value="${resolvedCreditCard || extracted.creditCard}"]`
+  if (extracted.workArrangement) {
+    const resolvedWorkArrangement = resolveWorkArrangementValue(extracted.workArrangement);
+    const workArrangementInput = document.querySelector(
+      `input[name="workArrangement"][value="${resolvedWorkArrangement || extracted.workArrangement}"]`
     );
-    if (creditCardInput) {
-      creditCardInput.checked = true;
+    if (workArrangementInput) {
+      workArrangementInput.checked = true;
     }
   }
 }
 
-function resolveCreditCardValue(value) {
+function resolveWorkArrangementValue(value) {
   if (typeof value !== "string") return null;
   const raw = value.trim().toLowerCase();
   if (!raw) return null;
 
   const directMap = {
-    "latitude-low-rate-mastercard": "low-rate-mastercard",
-    "latitude-go-mastercard": "go-mastercard",
-    "latitude-28-global-platinum-mastercard": "28-global-platinum-mastercard",
-    "latitude-28-platinum-mastercard": "28-global-platinum-mastercard"
+    "fully-remote": "fully-remote",
+    "hybrid": "hybrid",
+    "office-based": "office-based",
+    "temporary-work-from-home": "temporary-work-from-home",
+    "international-remote-work": "international-remote-work",
+    "flexible-hours-only": "flexible-hours-only"
   };
   if (directMap[raw]) return directMap[raw];
 
   const normalized = raw.replace(/[^\w\s]/g, " ").replace(/\s+/g, " ").trim();
   if (!normalized) return null;
 
-  const candidates = getCreditCardCandidatesFromDom();
+  const candidates = getWorkArrangementCandidatesFromDom();
   if (!candidates.length) return null;
 
   const byRaw = candidates.find((candidate) => candidate.keys.has(raw));
@@ -327,7 +329,7 @@ function resolveCreditCardValue(value) {
   const byNormalized = candidates.find((candidate) => candidate.keys.has(normalized));
   if (byNormalized) return byNormalized.value;
 
-  const ordinalIndex = parseOrdinalCreditCardIndex(normalized);
+  const ordinalIndex = parseOrdinalWorkArrangementIndex(normalized);
   if (ordinalIndex !== null && candidates[ordinalIndex]) {
     return candidates[ordinalIndex].value;
   }
@@ -343,21 +345,21 @@ function resolveCreditCardValue(value) {
   return null;
 }
 
-function getCreditCardCandidatesFromDom() {
-  const inputs = Array.from(document.querySelectorAll('input[name="creditCard"]'));
+function getWorkArrangementCandidatesFromDom() {
+  const inputs = Array.from(document.querySelectorAll('input[name="workArrangement"]'));
   return inputs
     .map((input) => {
-      const value = normalizeCreditCardLookupText(input.value);
+      const value = normalizeWorkArrangementLookupText(input.value);
       if (!value) return null;
 
-      const keys = new Set([value, normalizeCreditCardLookupText(input.value.replace(/-/g, " "))].filter(Boolean));
+      const keys = new Set([value, normalizeWorkArrangementLookupText(input.value.replace(/-/g, " "))].filter(Boolean));
       const option = input.closest(".hero-card-option");
       const titleText = option?.querySelector(".hero-card-title")?.textContent || "";
       const altText = option?.querySelector("img")?.alt || "";
       const ariaText = option?.getAttribute("aria-label") || "";
 
       for (const text of [titleText, altText, ariaText]) {
-        const normalized = normalizeCreditCardLookupText(text);
+        const normalized = normalizeWorkArrangementLookupText(text);
         if (normalized) keys.add(normalized);
       }
 
@@ -366,12 +368,12 @@ function getCreditCardCandidatesFromDom() {
     .filter(Boolean);
 }
 
-function parseOrdinalCreditCardIndex(normalizedText) {
+function parseOrdinalWorkArrangementIndex(normalizedText) {
   const match = normalizedText.match(
     /\b(1|one|first|1st|2|two|second|2nd|3|three|third|3rd|4|four|fourth|4th|5|five|fifth|5th)\b/
   );
   if (!match?.[1]) return null;
-  if (!/\b(card|credit|option)\b/.test(normalizedText) && !/\bgo with\b/.test(normalizedText)) {
+  if (!/\b(work|arrangement|option)\b/.test(normalizedText) && !/\bgo with\b/.test(normalizedText)) {
     return null;
   }
 
@@ -401,7 +403,7 @@ function parseOrdinalCreditCardIndex(normalizedText) {
   return Object.prototype.hasOwnProperty.call(indexMap, token) ? indexMap[token] : null;
 }
 
-function normalizeCreditCardLookupText(value) {
+function normalizeWorkArrangementLookupText(value) {
   if (typeof value !== "string") return null;
   const normalized = value
     .trim()

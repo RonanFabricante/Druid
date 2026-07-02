@@ -1,31 +1,30 @@
-const formFields = {
-  name: document.getElementById("name"),
-  email: document.getElementById("email"),
-  dob: document.getElementById("dob")
-};
+// ── DOM references ──────────────────────────────────────────────────────────
 const uploadedImagePreview = document.getElementById("uploadedImagePreview");
-const uploadedImageHint = document.getElementById("uploadedImageHint");
-const ocrNameField = document.getElementById("ocrName");
-const ocrPassportIdField = document.getElementById("ocrPassportId");
+const uploadedImageHint    = document.getElementById("uploadedImageHint");
+const ocrNameField         = document.getElementById("ocrName");
+const ocrPassportIdField   = document.getElementById("ocrPassportId");
 
+// ── Runtime state ────────────────────────────────────────────────────────────
 let syncTimer = null;
 let watermark = null;
 let lastRenderedImageActivityId = null;
 const druidRuntime = {
   chatBearerToken: null,
   directLineToken: null,
-  gptBearerToken: null,
-  conversationId: null,
-  getStatusUrl: null
+  gptBearerToken:  null,
+  conversationId:  null,
+  getStatusUrl:    null
 };
 let consecutiveFailures = 0;
 
+// ── Bootstrap ─────────────────────────────────────────────────────────────────
 installNetworkTokenCapture();
 
 document.addEventListener("DOMContentLoaded", () => {
   runAutoFillSync();
 });
 
+// ── Sync loop ─────────────────────────────────────────────────────────────────
 async function runAutoFillSync() {
   if (shouldStopAutofillSync()) {
     clearTimeout(syncTimer);
@@ -42,9 +41,9 @@ async function runAutoFillSync() {
         currentForm: getCurrentFormState(),
         chatBearerToken: druidRuntime.chatBearerToken,
         directLineToken: druidRuntime.directLineToken,
-        gptBearerToken: druidRuntime.gptBearerToken,
-        conversationId: druidRuntime.conversationId,
-        getStatusUrl: druidRuntime.getStatusUrl
+        gptBearerToken:  druidRuntime.gptBearerToken,
+        conversationId:  druidRuntime.conversationId,
+        getStatusUrl:    druidRuntime.getStatusUrl
       })
     });
 
@@ -56,12 +55,15 @@ async function runAutoFillSync() {
 
     consecutiveFailures = 0;
     watermark = payload?.watermark || watermark;
+
     const updates = payload?.updates || [];
     for (const update of updates) {
       applyExtractedFields(update.extracted || {});
     }
+
     applyUploadedImages(payload?.uploadedImages || []);
     applyImageExtraction(payload?.imageExtraction || null);
+
   } catch (err) {
     consecutiveFailures += 1;
     console.error("Autofill sync error:", err.message);
@@ -77,10 +79,178 @@ async function runAutoFillSync() {
   }
 }
 
+// Stop polling only when the entire form is complete — all sections including support person.
 function shouldStopAutofillSync() {
-  return Boolean(getCheckedValue("workArrangement"));
+  const firstName  = getFieldValue("firstName");
+  const lastName   = getFieldValue("lastName");
+  const dob        = getFieldValue("dateOfBirth");
+  const traits     = getCheckedValues("personalityTraits");
+  const important  = getFieldValue("importantThingsRightNow");
+  const music      = getFieldValue("favouriteSongOrMusic");
+  const worries    = getCheckedValues("worryTypes");
+  const worried    = getFieldValue("worriedOrUpsetDetails");
+  const coping     = getCheckedValues("copingStrategies");
+  const support    = getCheckedValues("supportPersonActions");
+  return Boolean(
+    firstName && lastName && dob &&
+    traits.length >= 1 &&
+    important && music &&
+    (worries.length >= 1 || worried) &&
+    coping.length >= 1 &&
+    support.length >= 1
+  );
 }
 
+// ── Read current form state ───────────────────────────────────────────────────
+function getCurrentFormState() {
+  return {
+    // Identity
+    firstName:   getFieldValue("firstName"),
+    lastName:    getFieldValue("lastName"),
+    dateOfBirth: getFieldValue("dateOfBirth"),
+    facility:    getFieldValue("facility"),
+    wrb:         getFieldValue("wrb"),
+
+    // Personality traits
+    personalityTraits: getCheckedValues("personalityTraits"),
+
+    // Life history
+    importantThingsRightNow: getFieldValue("importantThingsRightNow"),
+    favouriteSongOrMusic:    getFieldValue("favouriteSongOrMusic"),
+
+    // Worries & coping
+    worryTypes:           getCheckedValues("worryTypes"),
+    worriedOrUpsetDetails: getFieldValue("worriedOrUpsetDetails"),
+    copingStrategies:     getCheckedValues("copingStrategies"),
+    copingDistractWith:   getFieldValue("copingDistractWith"),
+    copingOther:          getFieldValue("copingOther"),
+
+    // Support person
+    supportPersonActions:     getCheckedValues("supportPersonActions"),
+    supportPersonActionsOther: getFieldValue("supportPersonActionsOther")
+  };
+}
+
+// ── Apply extracted fields to DOM ─────────────────────────────────────────────
+function applyExtractedFields(extracted) {
+  // Identity — plain text inputs
+  setFieldValue("firstName",   extracted.firstName);
+  setFieldValue("lastName",    extracted.lastName);
+  setFieldValue("dateOfBirth", extracted.dateOfBirth
+    ? formatDateForDisplay(extracted.dateOfBirth)
+    : null);
+  setFieldValue("facility",    extracted.facility);
+  setFieldValue("wrb",         extracted.wrb);
+
+  // Personality traits — checkboxes (array)
+  applyCheckboxArray("personalityTraits", extracted.personalityTraits);
+
+  // Life history — textareas
+  setFieldValue("importantThingsRightNow", extracted.importantThingsRightNow);
+  setFieldValue("favouriteSongOrMusic",    extracted.favouriteSongOrMusic);
+
+  // Worries & coping — checkboxes + textareas
+  applyCheckboxArray("worryTypes",       extracted.worryTypes);
+  setFieldValue("worriedOrUpsetDetails", extracted.worriedOrUpsetDetails);
+  applyCheckboxArray("copingStrategies", extracted.copingStrategies);
+  setFieldValue("copingDistractWith",    extracted.copingDistractWith);
+  setFieldValue("copingOther",           extracted.copingOther);
+
+  // Support person — checkboxes + text
+  applyCheckboxArray("supportPersonActions", extracted.supportPersonActions);
+  setFieldValue("supportPersonActionsOther", extracted.supportPersonActionsOther);
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/** Get value of an input or textarea by id. */
+function getFieldValue(id) {
+  const el = document.getElementById(id);
+  if (!el) return null;
+  const v = (el.value || "").trim();
+  return v || null;
+}
+
+/** Set value of an input or textarea by id (only if non-empty and not already set). */
+function setFieldValue(id, value) {
+  if (!value) return;
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (!el.value.trim()) {
+    el.value = value;
+  }
+}
+
+/** Return array of checked values for a named checkbox group. */
+function getCheckedValues(name) {
+  return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`))
+    .map((el) => el.value);
+}
+
+/**
+ * Check all checkboxes in `name` group whose value appears in `values` array.
+ * Does not uncheck already-checked boxes (additive).
+ */
+function applyCheckboxArray(name, values) {
+  if (!Array.isArray(values) || !values.length) return;
+  for (const value of values) {
+    const el = document.querySelector(`input[name="${name}"][value="${CSS.escape(value)}"]`);
+    if (el && !el.checked) el.checked = true;
+  }
+}
+
+/**
+ * Convert YYYY-MM-DD (server format) to "DD MMM YYYY" for display,
+ * or return the original string if it can't be parsed.
+ */
+function formatDateForDisplay(dateStr) {
+  if (!dateStr || typeof dateStr !== "string") return dateStr;
+  const iso = dateStr.trim();
+  const match = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return iso;
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const year  = match[1];
+  const month = months[parseInt(match[2], 10) - 1] || match[2];
+  const day   = parseInt(match[3], 10);
+  return `${day} ${month} ${year}`;
+}
+
+// ── Uploaded image display ────────────────────────────────────────────────────
+function applyUploadedImages(images) {
+  if (!uploadedImagePreview || !uploadedImageHint) return;
+  if (!Array.isArray(images) || !images.length) return;
+
+  const latest = images[images.length - 1];
+  const imageUrl = normalizeImageDataUrl(latest?.dataUrl);
+  if (!imageUrl) return;
+
+  const activityId = normalizeString(latest?.activityId);
+  if (activityId && activityId === lastRenderedImageActivityId) return;
+
+  uploadedImagePreview.src = imageUrl;
+  uploadedImagePreview.hidden = false;
+  if (uploadedImageHint) uploadedImageHint.hidden = true;
+  lastRenderedImageActivityId = activityId || imageUrl;
+}
+
+function normalizeImageDataUrl(value) {
+  const normalized = normalizeString(value);
+  if (!normalized) return null;
+  if (/^data:image\//i.test(normalized)) return normalized;
+  if (/^https?:\/\/\S+/i.test(normalized)) return normalized;
+  return null;
+}
+
+// ── OCR / passport extraction ─────────────────────────────────────────────────
+function applyImageExtraction(extraction) {
+  if (!ocrNameField || !ocrPassportIdField) return;
+  const name       = normalizeString(extraction?.name);
+  const passportId = normalizeString(extraction?.passportId);
+  ocrNameField.value       = name       || "";
+  ocrPassportIdField.value = passportId || "";
+}
+
+// ── Network token capture (unchanged) ────────────────────────────────────────
 function installNetworkTokenCapture() {
   const originalFetch = window.fetch.bind(window);
   window.fetch = async (...args) => {
@@ -88,18 +258,16 @@ function installNetworkTokenCapture() {
       const [input, init] = args;
       const url = typeof input === "string" ? input : input?.url;
       captureFromRequest(url, init?.headers);
-    } catch {
-      // Ignore capture errors; do not block app behavior.
-    }
+    } catch { /* silent */ }
     return originalFetch(...args);
   };
 
-  const originalOpen = XMLHttpRequest.prototype.open;
+  const originalOpen             = XMLHttpRequest.prototype.open;
   const originalSetRequestHeader = XMLHttpRequest.prototype.setRequestHeader;
-  const originalSend = XMLHttpRequest.prototype.send;
+  const originalSend             = XMLHttpRequest.prototype.send;
 
   XMLHttpRequest.prototype.open = function (method, url, ...rest) {
-    this.__captureUrl = typeof url === "string" ? url : "";
+    this.__captureUrl     = typeof url === "string" ? url : "";
     this.__captureHeaders = {};
     return originalOpen.call(this, method, url, ...rest);
   };
@@ -109,63 +277,42 @@ function installNetworkTokenCapture() {
       if (typeof name === "string" && typeof value === "string") {
         this.__captureHeaders[name.toLowerCase()] = value;
       }
-    } catch {
-      // Ignore.
-    }
+    } catch { /* silent */ }
     return originalSetRequestHeader.call(this, name, value);
   };
 
   XMLHttpRequest.prototype.send = function (body) {
-    try {
-      captureFromRequest(this.__captureUrl, this.__captureHeaders);
-    } catch {
-      // Ignore capture errors.
-    }
+    try { captureFromRequest(this.__captureUrl, this.__captureHeaders); } catch { /* silent */ }
     return originalSend.call(this, body);
   };
 }
 
 function captureFromRequest(url, headers) {
   if (!url || typeof url !== "string") return;
-  const bearer = getBearerToken(headers);
+  const bearer        = getBearerToken(headers);
   const normalizedUrl = url.toLowerCase();
 
   if (normalizedUrl.includes("/api/services/app/chat/authorizeanonymousasync")) {
-    if (bearer) {
-      druidRuntime.chatBearerToken = bearer;
-      maybePromoteToGptToken(bearer);
-    }
+    if (bearer) { druidRuntime.chatBearerToken = bearer; maybePromoteToGptToken(bearer); }
   }
 
   if (normalizedUrl.includes("/getstatus?")) {
     const statusUrl = getAbsoluteUrl(url);
     if (statusUrl) druidRuntime.getStatusUrl = statusUrl;
     const conversationFromQuery = getQueryParam(statusUrl || url, "ConversationId");
-    if (isLikelyConversationId(conversationFromQuery)) {
-      druidRuntime.conversationId = conversationFromQuery;
-    }
-    if (bearer) {
-      druidRuntime.chatBearerToken = bearer;
-      maybePromoteToGptToken(bearer);
-    }
+    if (isLikelyConversationId(conversationFromQuery)) druidRuntime.conversationId = conversationFromQuery;
+    if (bearer) { druidRuntime.chatBearerToken = bearer; maybePromoteToGptToken(bearer); }
   }
 
   const match = url.match(/\/directline\/conversations\/([^/]+)\/activities/i);
   if (match?.[1]) {
     const candidateConversationId = decodeURIComponent(match[1]);
-    if (isLikelyConversationId(candidateConversationId)) {
-      druidRuntime.conversationId = candidateConversationId;
-    }
-    if (bearer) {
-      druidRuntime.directLineToken = bearer;
-      maybePromoteToGptToken(bearer);
-    }
+    if (isLikelyConversationId(candidateConversationId)) druidRuntime.conversationId = candidateConversationId;
+    if (bearer) { druidRuntime.directLineToken = bearer; maybePromoteToGptToken(bearer); }
   }
 
   if (normalizedUrl.includes("/openai/deployments/")) {
-    if (bearer) {
-      druidRuntime.gptBearerToken = bearer;
-    }
+    if (bearer) druidRuntime.gptBearerToken = bearer;
   }
 }
 
@@ -173,62 +320,37 @@ function getBearerToken(headers) {
   const authValue = readHeader(headers, "authorization");
   if (!authValue || typeof authValue !== "string") return null;
   const match = authValue.match(/^Bearer\s+(.+)$/i);
-  if (!match?.[1]) return null;
-  return match[1].trim();
+  return match?.[1]?.trim() || null;
 }
 
 function readHeader(headers, key) {
   if (!headers) return null;
   const lowerKey = key.toLowerCase();
-
-  if (typeof Headers !== "undefined" && headers instanceof Headers) {
-    return headers.get(key) || headers.get(lowerKey);
-  }
-
+  if (typeof Headers !== "undefined" && headers instanceof Headers) return headers.get(key) || headers.get(lowerKey);
   if (Array.isArray(headers)) {
-    const hit = headers.find(
-      (entry) =>
-        Array.isArray(entry) &&
-        typeof entry[0] === "string" &&
-        entry[0].toLowerCase() === lowerKey
-    );
+    const hit = headers.find((e) => Array.isArray(e) && typeof e[0] === "string" && e[0].toLowerCase() === lowerKey);
     return hit ? hit[1] : null;
   }
-
   if (typeof headers === "object") {
     for (const [k, v] of Object.entries(headers)) {
-      if (typeof k === "string" && k.toLowerCase() === lowerKey) {
-        return typeof v === "string" ? v : null;
-      }
+      if (typeof k === "string" && k.toLowerCase() === lowerKey) return typeof v === "string" ? v : null;
     }
   }
-
   return null;
 }
 
 function getAbsoluteUrl(url) {
-  try {
-    return new URL(url, window.location.href).toString();
-  } catch {
-    return null;
-  }
+  try { return new URL(url, window.location.href).toString(); } catch { return null; }
 }
 
 function getQueryParam(url, key) {
-  try {
-    const parsed = new URL(url, window.location.href);
-    return parsed.searchParams.get(key);
-  } catch {
-    return null;
-  }
+  try { return new URL(url, window.location.href).searchParams.get(key); } catch { return null; }
 }
 
 function isLikelyConversationId(value) {
   if (!value || typeof value !== "string") return false;
   const trimmed = value.trim();
-  if (trimmed.length < 10) return false;
-  if (!trimmed.includes("-")) return false;
-  return /^[A-Za-z0-9._|-]+$/.test(trimmed);
+  return trimmed.length >= 10 && trimmed.includes("-") && /^[A-Za-z0-9._|-]+$/.test(trimmed);
 }
 
 function maybePromoteToGptToken(token) {
@@ -242,220 +364,22 @@ function isLikelyLlmToken(token) {
   try {
     const parts = token.split(".");
     if (parts.length < 2) return false;
-    const payloadJson = base64UrlDecode(parts[1]);
-    const payload = JSON.parse(payloadJson);
-    const aud = typeof payload?.aud === "string" ? payload.aud.trim() : "";
-    const llmClaims =
-      typeof payload?.["Druid.LLM.UserClaims"] === "string"
-        ? payload["Druid.LLM.UserClaims"].trim()
-        : "";
-    const iss = typeof payload?.iss === "string" ? payload.iss.trim() : "";
+    const payload = JSON.parse(base64UrlDecode(parts[1]));
+    const aud      = typeof payload?.aud === "string"                        ? payload.aud.trim()                        : "";
+    const llmClaims = typeof payload?.["Druid.LLM.UserClaims"] === "string" ? payload["Druid.LLM.UserClaims"].trim()   : "";
+    const iss      = typeof payload?.iss === "string"                        ? payload.iss.trim()                        : "";
     return aud === "Druid.LLM" || !!llmClaims || iss === "Druid AI";
-  } catch {
-    return false;
-  }
+  } catch { return false; }
 }
 
 function base64UrlDecode(input) {
   const normalized = input.replace(/-/g, "+").replace(/_/g, "/");
   const pad = normalized.length % 4;
-  const padded = pad ? normalized + "=".repeat(4 - pad) : normalized;
-  return atob(padded);
-}
-
-function getCurrentFormState() {
-  return {
-    name: formFields.name.value || null,
-    email: formFields.email.value || null,
-    dob: formFields.dob.value || null,
-    gender: getCheckedValue("gender"),
-    relationshipStatus: getCheckedValue("relationshipStatus"),
-    workArrangement: getCheckedValue("workArrangement")
-  };
-}
-
-function applyExtractedFields(extracted) {
-  if (extracted.name) formFields.name.value = extracted.name;
-  if (extracted.email) formFields.email.value = extracted.email;
-  if (extracted.dob) formFields.dob.value = extracted.dob;
-
-  if (extracted.gender) {
-    const genderInput = document.querySelector(`input[name="gender"][value="${extracted.gender}"]`);
-    if (genderInput) genderInput.checked = true;
-  }
-
-  if (extracted.relationshipStatus) {
-    const relationInput = document.querySelector(
-      `input[name="relationshipStatus"][value="${extracted.relationshipStatus}"]`
-    );
-    if (relationInput) relationInput.checked = true;
-  }
-
-  if (extracted.workArrangement) {
-    const resolvedWorkArrangement = resolveWorkArrangementValue(extracted.workArrangement);
-    const workArrangementInput = document.querySelector(
-      `input[name="workArrangement"][value="${resolvedWorkArrangement || extracted.workArrangement}"]`
-    );
-    if (workArrangementInput) {
-      workArrangementInput.checked = true;
-    }
-  }
-}
-
-function resolveWorkArrangementValue(value) {
-  if (typeof value !== "string") return null;
-  const raw = value.trim().toLowerCase();
-  if (!raw) return null;
-
-  const directMap = {
-    "fully-remote": "fully-remote",
-    "hybrid": "hybrid",
-    "office-based": "office-based",
-    "temporary-work-from-home": "temporary-work-from-home",
-    "international-remote-work": "international-remote-work",
-    "flexible-hours-only": "flexible-hours-only"
-  };
-  if (directMap[raw]) return directMap[raw];
-
-  const normalized = raw.replace(/[^\w\s]/g, " ").replace(/\s+/g, " ").trim();
-  if (!normalized) return null;
-
-  const candidates = getWorkArrangementCandidatesFromDom();
-  if (!candidates.length) return null;
-
-  const byRaw = candidates.find((candidate) => candidate.keys.has(raw));
-  if (byRaw) return byRaw.value;
-
-  const byNormalized = candidates.find((candidate) => candidate.keys.has(normalized));
-  if (byNormalized) return byNormalized.value;
-
-  const ordinalIndex = parseOrdinalWorkArrangementIndex(normalized);
-  if (ordinalIndex !== null && candidates[ordinalIndex]) {
-    return candidates[ordinalIndex].value;
-  }
-
-  for (const candidate of candidates) {
-    for (const key of candidate.keys) {
-      if (key.length >= 4 && normalized.includes(key)) {
-        return candidate.value;
-      }
-    }
-  }
-
-  return null;
-}
-
-function getWorkArrangementCandidatesFromDom() {
-  const inputs = Array.from(document.querySelectorAll('input[name="workArrangement"]'));
-  return inputs
-    .map((input) => {
-      const value = normalizeWorkArrangementLookupText(input.value);
-      if (!value) return null;
-
-      const keys = new Set([value, normalizeWorkArrangementLookupText(input.value.replace(/-/g, " "))].filter(Boolean));
-      const option = input.closest(".hero-card-option");
-      const titleText = option?.querySelector(".hero-card-title")?.textContent || "";
-      const altText = option?.querySelector("img")?.alt || "";
-      const ariaText = option?.getAttribute("aria-label") || "";
-
-      for (const text of [titleText, altText, ariaText]) {
-        const normalized = normalizeWorkArrangementLookupText(text);
-        if (normalized) keys.add(normalized);
-      }
-
-      return { value: input.value, keys };
-    })
-    .filter(Boolean);
-}
-
-function parseOrdinalWorkArrangementIndex(normalizedText) {
-  const match = normalizedText.match(
-    /\b(1|one|first|1st|2|two|second|2nd|3|three|third|3rd|4|four|fourth|4th|5|five|fifth|5th)\b/
-  );
-  if (!match?.[1]) return null;
-  if (!/\b(work|arrangement|option)\b/.test(normalizedText) && !/\bgo with\b/.test(normalizedText)) {
-    return null;
-  }
-
-  const token = match[1];
-  const indexMap = {
-    "1": 0,
-    one: 0,
-    first: 0,
-    "1st": 0,
-    "2": 1,
-    two: 1,
-    second: 1,
-    "2nd": 1,
-    "3": 2,
-    three: 2,
-    third: 2,
-    "3rd": 2,
-    "4": 3,
-    four: 3,
-    fourth: 3,
-    "4th": 3,
-    "5": 4,
-    five: 4,
-    fifth: 4,
-    "5th": 4
-  };
-  return Object.prototype.hasOwnProperty.call(indexMap, token) ? indexMap[token] : null;
-}
-
-function normalizeWorkArrangementLookupText(value) {
-  if (typeof value !== "string") return null;
-  const normalized = value
-    .trim()
-    .toLowerCase()
-    .replace(/[^\w\s]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  return normalized || null;
-}
-
-function getCheckedValue(name) {
-  const checked = document.querySelector(`input[name="${name}"]:checked`);
-  return checked ? checked.value : null;
-}
-
-function applyUploadedImages(images) {
-  if (!uploadedImagePreview || !uploadedImageHint) return;
-  if (!Array.isArray(images) || !images.length) {
-    return;
-  }
-
-  const latest = images[images.length - 1];
-  const imageUrl = normalizeImageDataUrl(latest?.dataUrl);
-  if (!imageUrl) return;
-
-  const activityId = normalizeString(latest?.activityId);
-  if (activityId && activityId === lastRenderedImageActivityId) return;
-
-  uploadedImagePreview.src = imageUrl;
-  uploadedImagePreview.hidden = false;
-  uploadedImageHint.hidden = true;
-  lastRenderedImageActivityId = activityId || imageUrl;
-}
-
-function normalizeImageDataUrl(value) {
-  const normalized = normalizeString(value);
-  if (!normalized) return null;
-  if (/^data:image\//i.test(normalized)) return normalized;
-  if (/^https?:\/\/\S+/i.test(normalized)) return normalized;
-  return null;
+  return atob(pad ? normalized + "=".repeat(4 - pad) : normalized);
 }
 
 function normalizeString(value) {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
   return trimmed.length ? trimmed : null;
-}
-
-function applyImageExtraction(extraction) {
-  if (!ocrNameField || !ocrPassportIdField) return;
-  const name = normalizeString(extraction?.name);
-  const passportId = normalizeString(extraction?.passportId);
-  ocrNameField.value = name || "";
-  ocrPassportIdField.value = passportId || "";
 }

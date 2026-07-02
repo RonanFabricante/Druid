@@ -22,102 +22,80 @@ const DIRECTLINE_ACTIVITIES_BASE_URL =
   "https://directline.botframework.com/v3/directline/conversations";
 const DRUID_CHAT_BEARER_TOKEN = process.env.DRUID_CHAT_BEARER_TOKEN || "";
 const TRANSCRIPT_CONTEXT_LINES = Number(process.env.TRANSCRIPT_CONTEXT_LINES || 20);
-const WORK_ARRANGEMENT_OPTIONS = [
-  {
-    value: "fully remote",
-    aliases: [
-      "fully remote",
-      "full remote",
-      "remote only",
-      "100% remote",
-      "completely remote",
-      "work from home full time",
-      "wfh full time",
-      "remote work",
-      "first option",
-      "1st option",
-      "option 1",
-      "option one"
-    ]
-  },
-  {
-    value: "hybrid",
-    aliases: [
-      "hybrid",
-      "hybrid work",
-      "hybrid working",
-      "part remote part office",
-      "mix of home and office",
-      "some days remote",
-      "second option",
-      "2nd option",
-      "option 2",
-      "option two"
-    ]
-  },
-  {
-    value: "mostly office based",
-    aliases: [
-      "mostly office based",
-      "mostly in office",
-      "mainly office",
-      "primarily office",
-      "office based",
-      "mostly office",
-      "third option",
-      "3rd option",
-      "option 3",
-      "option three"
-    ]
-  },
-  {
-    value: "temporary work from home",
-    aliases: [
-      "temporary work from home",
-      "temporary wfh",
-      "temp wfh",
-      "temporary remote",
-      "short term remote",
-      "temporary home working",
-      "fourth option",
-      "4th option",
-      "option 4",
-      "option four"
-    ]
-  },
-  {
-    value: "internaional remote work",
-    aliases: [
-      "internaional remote work",
-      "international remote",
-      "remote from abroad",
-      "overseas remote",
-      "working internationally",
-      "remote from another country",
-      "global remote",
-      "fifth option",
-      "5th option",
-      "option 5",
-      "option five"
-    ]
-  },
-  {
-    value: "flexible hours only",
-    aliases: [
-      "flexible hours only",
-      "flexible hours",
-      "flexi hours",
-      "flexitime",
-      "flexible working hours",
-      "flex time",
-      "flexible schedule",
-      "sixth option",
-      "6th option",
-      "option 6",
-      "option six"
-    ]
-  }
+// Aged care "About Me" assessment — personality trait options
+const PERSONALITY_TRAIT_OPTIONS = [
+  "affectionate", "anxious", "caring", "confident", "content",
+  "creative", "curious", "determined", "dependable", "easy-going",
+  "friendly", "funny", "generous", "good listener", "happy",
+  "hard working", "homebody", "intelligent", "insecure", "kind",
+  "loving", "a nurturer", "outgoing", "outspoken", "passionate",
+  "perceptive", "perfectionist", "popular", "proud", "fun-loving"
 ];
+
+// Worry type options
+const WORRY_TYPE_OPTIONS = [
+  "my own health",
+  "the health of loved ones",
+  "finances",
+  "feeling lonely",
+  "family issues",
+  "relationships in my life",
+  "other"
+];
+
+// Coping strategy options
+const COPING_STRATEGY_OPTIONS = [
+  "look on the bright side",
+  "spend time with people i am close to",
+  "spend time alone",
+  "my faith/spiritual beliefs helps me",
+  "i try to keep busy",
+  "i like to work on solutions to things",
+  "i distract myself with",
+  "other"
+];
+
+// Support person actions options
+const SUPPORT_PERSON_ACTIONS_OPTIONS = [
+  "puts my favourite music on",
+  "sits and talks with me",
+  "prays with me",
+  "looks through photographs with me",
+  "holds or hugs me",
+  "makes me laugh",
+  "gives me a hand massage",
+  "brings me my favourite",
+  "other"
+];
+
+// Third-person variants the bot/user say → canonical first-person checkbox value.
+// The bot asks "what does that person do?" using "them/they" language; user answers similarly.
+const SUPPORT_PERSON_ACTIONS_ALIASES = {
+  "puts their favourite music on":       "puts my favourite music on",
+  "puts his favourite music on":         "puts my favourite music on",
+  "puts her favourite music on":         "puts my favourite music on",
+  "sits and talks with them":            "sits and talks with me",
+  "sits and talks with him":             "sits and talks with me",
+  "sits and talks with her":             "sits and talks with me",
+  "prays with them":                     "prays with me",
+  "prays with him":                      "prays with me",
+  "prays with her":                      "prays with me",
+  "looks through photographs with them": "looks through photographs with me",
+  "looks through photographs with him":  "looks through photographs with me",
+  "looks through photographs with her":  "looks through photographs with me",
+  "holds or hugs them":                  "holds or hugs me",
+  "holds or hugs him":                   "holds or hugs me",
+  "holds or hugs her":                   "holds or hugs me",
+  "makes them laugh":                    "makes me laugh",
+  "makes him laugh":                     "makes me laugh",
+  "makes her laugh":                     "makes me laugh",
+  "gives them a hand massage":           "gives me a hand massage",
+  "gives him a hand massage":            "gives me a hand massage",
+  "gives her a hand massage":            "gives me a hand massage",
+  "brings them their favourite":         "brings me my favourite",
+  "brings him his favourite":            "brings me my favourite",
+  "brings her her favourite":            "brings me my favourite",
+};
 
 const druidRuntimeState = {
   authBearerToken: null,
@@ -610,73 +588,199 @@ function normalizeImageOcrFields(payload) {
   };
 }
 
+function normalizeStringArray(value, allowedOptions, aliasMap) {
+  if (!Array.isArray(value)) return [];
+  const allowed = new Set(allowedOptions.map((s) => s.toLowerCase()));
+  return value
+    .map((v) => {
+      if (typeof v !== "string") return null;
+      const lower = v.trim().toLowerCase();
+      // Resolve alias if provided (e.g. third-person → first-person)
+      const resolved = (aliasMap && aliasMap[lower]) ? aliasMap[lower].toLowerCase() : lower;
+      return allowed.has(resolved) ? resolved : null;
+    })
+    .filter(Boolean);
+}
+
 function normalizeFormState(form) {
   return {
-    name: normalizeName(form?.name),
-    email: normalizeEmail(form?.email),
-    dob: normalizeDate(form?.dob),
-    gender: normalizeGender(form?.gender),
-    relationshipStatus: normalizeRelationshipStatus(form?.relationshipStatus),
-    workArrangement: normalizeWorkArrangement(form?.workArrangement)
+    // Section: About Me — resident identity
+    firstName: normalizeString(form?.firstName) || null,
+    lastName: normalizeString(form?.lastName) || null,
+    dateOfBirth: normalizeDate(form?.dateOfBirth) || null,
+    facility: normalizeString(form?.facility) || null,
+    wrb: normalizeString(form?.wrb) || null,
+
+    // Section: Personality traits (array of selected strings)
+    personalityTraits: normalizeStringArray(form?.personalityTraits, PERSONALITY_TRAIT_OPTIONS),
+
+    // Section: Life history / important things
+    importantThingsRightNow: normalizeString(form?.importantThingsRightNow) || null,
+    favouriteSongOrMusic: normalizeString(form?.favouriteSongOrMusic) || null,
+
+    // Section: Worries and Coping
+    worryTypes: normalizeStringArray(form?.worryTypes, WORRY_TYPE_OPTIONS),
+    worriedOrUpsetDetails: normalizeString(form?.worriedOrUpsetDetails) || null,
+    copingStrategies: normalizeStringArray(form?.copingStrategies, COPING_STRATEGY_OPTIONS),
+    copingDistractWith: normalizeString(form?.copingDistractWith) || null,
+    copingOther: normalizeString(form?.copingOther) || null,
+
+    // Section: Support person
+    supportPersonActions: normalizeStringArray(form?.supportPersonActions, SUPPORT_PERSON_ACTIONS_OPTIONS, SUPPORT_PERSON_ACTIONS_ALIASES),
+    supportPersonActionsOther: normalizeString(form?.supportPersonActionsOther) || null
   };
+}
+
+function mergeStringArrays(patchArr, currentArr) {
+  const base = Array.isArray(currentArr) ? currentArr : [];
+  const patch = Array.isArray(patchArr) ? patchArr : [];
+  if (!patch.length) return base;
+  // Union: keep all from base, add new from patch
+  const merged = [...base];
+  for (const item of patch) {
+    if (!merged.includes(item)) merged.push(item);
+  }
+  return merged;
 }
 
 function mergeFormState(currentForm, patchForm) {
   return {
-    name: patchForm?.name || currentForm?.name || null,
-    email: patchForm?.email || currentForm?.email || null,
-    dob: patchForm?.dob || currentForm?.dob || null,
-    gender: patchForm?.gender || currentForm?.gender || null,
-    relationshipStatus: patchForm?.relationshipStatus || currentForm?.relationshipStatus || null,
-    workArrangement: patchForm?.workArrangement || currentForm?.workArrangement || null
+    firstName: patchForm?.firstName || currentForm?.firstName || null,
+    lastName: patchForm?.lastName || currentForm?.lastName || null,
+    dateOfBirth: patchForm?.dateOfBirth || currentForm?.dateOfBirth || null,
+    facility: patchForm?.facility || currentForm?.facility || null,
+    wrb: patchForm?.wrb || currentForm?.wrb || null,
+    personalityTraits: mergeStringArrays(patchForm?.personalityTraits, currentForm?.personalityTraits),
+    importantThingsRightNow: patchForm?.importantThingsRightNow || currentForm?.importantThingsRightNow || null,
+    favouriteSongOrMusic: patchForm?.favouriteSongOrMusic || currentForm?.favouriteSongOrMusic || null,
+    worryTypes: mergeStringArrays(patchForm?.worryTypes, currentForm?.worryTypes),
+    worriedOrUpsetDetails: patchForm?.worriedOrUpsetDetails || currentForm?.worriedOrUpsetDetails || null,
+    copingStrategies: mergeStringArrays(patchForm?.copingStrategies, currentForm?.copingStrategies),
+    copingDistractWith: patchForm?.copingDistractWith || currentForm?.copingDistractWith || null,
+    copingOther: patchForm?.copingOther || currentForm?.copingOther || null,
+    supportPersonActions: mergeStringArrays(patchForm?.supportPersonActions, currentForm?.supportPersonActions),
+    supportPersonActionsOther: patchForm?.supportPersonActionsOther || currentForm?.supportPersonActionsOther || null
   };
 }
 
 function hasAnyField(form) {
   return Boolean(
-    form?.name ||
-      form?.email ||
-      form?.dob ||
-      form?.gender ||
-      form?.relationshipStatus ||
-      form?.workArrangement
+    form?.firstName ||
+      form?.lastName ||
+      form?.dateOfBirth ||
+      form?.facility ||
+      form?.wrb ||
+      (Array.isArray(form?.personalityTraits) && form.personalityTraits.length) ||
+      form?.importantThingsRightNow ||
+      form?.favouriteSongOrMusic ||
+      (Array.isArray(form?.worryTypes) && form.worryTypes.length) ||
+      form?.worriedOrUpsetDetails ||
+      (Array.isArray(form?.copingStrategies) && form.copingStrategies.length) ||
+      form?.copingDistractWith ||
+      form?.copingOther ||
+      (Array.isArray(form?.supportPersonActions) && form.supportPersonActions.length) ||
+      form?.supportPersonActionsOther
   );
 }
 
 async function extractFieldsWithGpt({ conversation, currentForm, overrideGptBearerToken }) {
   const systemPrompt = `
-You are a structured information extractor.
-From the provided conversation payload, extract ONLY these fields if explicitly or clearly implied:
-- name (string)
-- email (string, valid email format if present)
-- dob (string in YYYY-MM-DD format)
-- gender (one of: male, female, non-binary, prefer-not-to-say)
-- relationshipStatus (one of: single, married, in-a-relationship, divorced, widowed, prefer-not-to-say)
-- workArrangement (one of: fully remote, hybrid, mostly office based, temporary work from home, internaional remote work, flexible hours only)
+You are a structured information extractor for an aged care facility's resident "About Me" assessment form.
+From the provided conversation payload, extract ONLY these fields if explicitly or clearly stated:
+
+Resident identity:
+- firstName (string)
+- lastName (string)
+- dateOfBirth (string in YYYY-MM-DD format)
+- facility (string — name of the aged care facility)
+- wrb (string — wing/room/bed identifier, e.g. "Wing/11/11")
+
+Personality traits (array of strings — select only from allowed values):
+- personalityTraits: array containing zero or more of: "affectionate", "anxious", "caring", "confident", "content",
+  "creative", "curious", "determined", "dependable", "easy-going", "friendly", "funny", "generous",
+  "good listener", "happy", "hard working", "homebody", "intelligent", "insecure", "kind",
+  "loving", "a nurturer", "outgoing", "outspoken", "passionate", "perceptive", "perfectionist",
+  "popular", "proud", "fun-loving"
+
+Life history (the family member describes the resident in third person — e.g. "My father loves his family", "She enjoys classical music"):
+- importantThingsRightNow (string — extract the FULL user answer after the bot asks about most important things in the resident's life right now; bot question contains phrases like "most important things", "life right now", "family, friends, faith". Store the user's complete answer verbatim.)
+- favouriteSongOrMusic (string — extract the FULL user answer after the bot asks about favourite song or music; bot question contains phrases like "favourite song", "type of music", "music they love". Store the user's complete answer verbatim.)
+
+Worries and Coping:
+- worryTypes (array of strings from: "my own health", "the health of loved ones", "finances",
+  "feeling lonely", "family issues", "relationships in my life", "other")
+- worriedOrUpsetDetails (string — extract the FULL user answer after the bot asks if the resident is worried or upset about anything right now; bot question contains "worried or upset about anything", "particularly worried". Store verbatim.)
+- copingStrategies (array of strings from: "look on the bright side", "spend time with people i am close to",
+  "spend time alone", "my faith/spiritual beliefs helps me", "i try to keep busy",
+  "i like to work on solutions to things", "i distract myself with", "other")
+- copingDistractWith (string — what they distract themselves with, if mentioned)
+- copingOther (string — other coping strategy free text, if mentioned)
+
+Support person:
+- supportPersonActions (array of strings — the family member or bot may use third-person phrasing like "sits and talks with them" or first-person like "sits and talks with me"; always return the FIRST-PERSON canonical value from this list:
+  "puts my favourite music on", "sits and talks with me", "prays with me",
+  "looks through photographs with me", "holds or hugs me", "makes me laugh",
+  "gives me a hand massage", "brings me my favourite", "other")
+- supportPersonActionsOther (string — other support person action free text, if mentioned)
+
+CONVERSATION CONTEXT:
+This is a conversation between a chatbot (bot) and a FAMILY MEMBER (user, labelled "user:" in the transcript). The family member is filling in a profile for their PARENT (the resident). The resident does not speak.
+
+The transcript is an ordered list of lines like:
+  bot: What are the most important things to Jose in his life right now? ...
+  user: My father loves his family and his daily walk.
+  bot: Does Jose have a favourite song or type of music they love?
+  user: He loves Frank Sinatra.
+
+To extract a field: find the bot question that matches the field description, then take the VERY NEXT user line as the value.
+
+CONCRETE EXAMPLES:
+- bot asks about "most important things" → next user line → importantThingsRightNow = that full user text
+- bot asks about "favourite song" or "music" → next user line → favouriteSongOrMusic = that full user text
+- bot asks "worried or upset about anything" → next user line → worriedOrUpsetDetails = that full user text
 
 Rules:
-1) Return strict JSON object only.
-2) If a value is unknown, set it to null.
-3) Never invent details.
-4) Normalize DOB to YYYY-MM-DD when possible.
-5) Normalize category labels exactly to allowed enum values.
-6) Prioritize explicit user-provided values over bot questions/prompts.
-7) If both bot and user messages are present, use user messages as the source of truth.
-8) For name, return only the person's name value (2-5 words), never include intent phrases like "my name is", "I am", or extra sentence text.
-9) If message says "my name is abhijeet kumar", output name as "Abhijeet Kumar" only.
-10) For workArrangement, map user preference from full name, short name, or ordinal phrasing (like "first option", "go with second", "hybrid") to the exact enum.
+1) Return strict JSON object only — no markdown, no extra keys.
+2) If a value is unknown or not mentioned, set scalars to null and arrays to [].
+3) Never invent or infer details that are not clearly stated.
+4) Normalize dateOfBirth to YYYY-MM-DD format when possible.
+5) For array fields, only include values from the allowed lists above (lowercased, exact match).
+6) For free-text fields (importantThingsRightNow, favouriteSongOrMusic, worriedOrUpsetDetails), copy the user's answer VERBATIM — do not summarise or paraphrase.
+7) CRITICAL — firstName and lastName are the RESIDENT's name only:
+   - firstName must come from user reply after bot asks "What's your dad's/mum's/parent's first name?"
+   - lastName must come from user reply after bot asks "[Name]'s last name?"
+   - FORBIDDEN name values: "their", "son", "daughter", "mum", "dad", "I'm", "I am", "their son", "their daughter" and any relationship phrase.
+   - When in doubt, return null.
 `;
 
+  // `conversation` arrives as a pre-built JSON string from buildAnonymousPayload/buildTranscriptPayload.
+  // Parse it first so we don't double-encode it when wrapping in userPrompt.
+  let conversationObj;
+  try {
+    conversationObj = typeof conversation === "string" ? JSON.parse(conversation) : conversation;
+  } catch {
+    conversationObj = { raw: conversation };
+  }
+
   const userPrompt = JSON.stringify({
-    conversation,
+    conversation: conversationObj,
     currentForm: currentForm || null,
     expectedOutputShape: {
-      name: null,
-      email: null,
-      dob: null,
-      gender: null,
-      relationshipStatus: null,
-      workArrangement: null
+      firstName: null,
+      lastName: null,
+      dateOfBirth: null,
+      facility: null,
+      wrb: null,
+      personalityTraits: [],
+      importantThingsRightNow: null,
+      favouriteSongOrMusic: null,
+      worryTypes: [],
+      worriedOrUpsetDetails: null,
+      copingStrategies: [],
+      copingDistractWith: null,
+      copingOther: null,
+      supportPersonActions: [],
+      supportPersonActionsOther: null
     }
   });
 
@@ -1351,46 +1455,118 @@ function isAnonymousActivity(activity) {
 function heuristicExtractFieldsFromActivities(activities, currentForm) {
   const merged = normalizeFormState(currentForm || {});
   const userMessages = activities.filter(isUserActivity).map((a) => normalizeString(a.text)).filter(Boolean);
+  const allText = userMessages.join(" ").toLowerCase();
 
-  for (const text of userMessages) {
-    if (!merged.email) {
-      const emailMatch = text.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/);
-      if (emailMatch) merged.email = normalizeEmail(emailMatch[0]);
-    }
-
-    if (!merged.dob) {
+  // Extract date of birth
+  if (!merged.dateOfBirth) {
+    for (const text of userMessages) {
       const dateMatch =
         text.match(/\b\d{4}-\d{2}-\d{2}\b/) ||
         text.match(/\b\d{2}-\d{2}-\d{4}\b/) ||
         text.match(/\b\d{2}\/\d{2}\/\d{4}\b/);
-      if (dateMatch) merged.dob = normalizeDate(dateMatch[0]);
+      if (dateMatch) {
+        merged.dateOfBirth = normalizeDate(dateMatch[0]);
+        break;
+      }
     }
+  }
 
-    if (!merged.name && looksLikeName(text)) {
-      merged.name = normalizeString(text);
+  // Extract first/last name from messages that look like a name
+  if (!merged.firstName) {
+    for (const text of userMessages) {
+      const normalized = normalizeName(text);
+      if (normalized) {
+        const parts = normalized.split(" ");
+        merged.firstName = parts[0] || null;
+        merged.lastName = parts.slice(1).join(" ") || null;
+        break;
+      }
     }
   }
 
-  if (!merged.gender) {
-    const all = userMessages.join(" ").toLowerCase();
-    if (/\bmale\b/.test(all)) merged.gender = "male";
-    else if (/\bfemale\b/.test(all)) merged.gender = "female";
-    else if (/\bnon[- ]?binary\b/.test(all)) merged.gender = "non-binary";
+  // ── Free-text fields: scan the full transcript for bot-question → user-answer pairs ──
+  // Use the stored transcript entries (which include both bot and user lines) for context.
+  const transcriptLines = druidRuntimeState.transcriptEntries.map((e) => e.line);
+
+  if (!merged.importantThingsRightNow || !merged.favouriteSongOrMusic || !merged.worriedOrUpsetDetails) {
+    for (let i = 1; i < transcriptLines.length; i++) {
+      const line = transcriptLines[i];
+      // Only look at user lines
+      if (!line.startsWith("user:")) continue;
+      const userText = line.replace(/^user:\s*/i, "").trim();
+      if (!userText) continue;
+
+      // Scan back through preceding lines for the most recent bot question
+      for (let j = i - 1; j >= Math.max(0, i - 5); j--) {
+        const prevLine = transcriptLines[j].toLowerCase();
+        if (!prevLine.startsWith("bot") && !prevLine.startsWith("kai")) continue;
+
+        if (!merged.importantThingsRightNow &&
+            (prevLine.includes("most important things") ||
+             prevLine.includes("life right now") ||
+             prevLine.includes("family, friends, faith") ||
+             prevLine.includes("sentimental objects"))) {
+          merged.importantThingsRightNow = userText;
+          break;
+        }
+
+        if (!merged.favouriteSongOrMusic &&
+            (prevLine.includes("favourite song") ||
+             prevLine.includes("favorite song") ||
+             prevLine.includes("piece of music") ||
+             prevLine.includes("music they love") ||
+             prevLine.includes("type of music"))) {
+          merged.favouriteSongOrMusic = userText;
+          break;
+        }
+
+        if (!merged.worriedOrUpsetDetails &&
+            (prevLine.includes("worried or upset about anything") ||
+             prevLine.includes("particularly worried") ||
+             prevLine.includes("worried or upset about right now"))) {
+          merged.worriedOrUpsetDetails = userText;
+          break;
+        }
+      }
+    }
   }
 
-  if (!merged.relationshipStatus) {
-    const all = userMessages.join(" ").toLowerCase();
-    if (/\bsingle\b/.test(all)) merged.relationshipStatus = "single";
-    else if (/\bmarried\b/.test(all)) merged.relationshipStatus = "married";
-    else if (/\bdivorced\b/.test(all)) merged.relationshipStatus = "divorced";
-    else if (/\bwidowed\b/.test(all)) merged.relationshipStatus = "widowed";
-    else if (/\bin a relationship\b/.test(all)) merged.relationshipStatus = "in-a-relationship";
+  // Heuristic: personality traits mentioned
+  for (const trait of PERSONALITY_TRAIT_OPTIONS) {
+    const pattern = new RegExp("\\b" + trait.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "i");
+    if (pattern.test(allText) && !merged.personalityTraits.includes(trait)) {
+      merged.personalityTraits.push(trait);
+    }
   }
 
-  for (const text of userMessages) {
-    const arrangementChoice = normalizeWorkArrangement(text);
-    if (arrangementChoice) {
-      merged.workArrangement = arrangementChoice;
+  // Heuristic: worry types
+  for (const worry of WORRY_TYPE_OPTIONS) {
+    const pattern = new RegExp("\\b" + worry.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "i");
+    if (pattern.test(allText) && !merged.worryTypes.includes(worry)) {
+      merged.worryTypes.push(worry);
+    }
+  }
+
+  // Heuristic: coping strategies
+  for (const strategy of COPING_STRATEGY_OPTIONS) {
+    const pattern = new RegExp("\\b" + strategy.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "i");
+    if (pattern.test(allText) && !merged.copingStrategies.includes(strategy)) {
+      merged.copingStrategies.push(strategy);
+    }
+  }
+
+  // Heuristic: support person actions — match both first-person (checkbox values) and
+  // third-person variants (how the bot asks / user answers)
+  const allSupportCandidates = [
+    ...SUPPORT_PERSON_ACTIONS_OPTIONS,
+    ...Object.keys(SUPPORT_PERSON_ACTIONS_ALIASES)
+  ];
+  for (const candidate of allSupportCandidates) {
+    const canonical = SUPPORT_PERSON_ACTIONS_ALIASES[candidate] || candidate;
+    if (merged.supportPersonActions.includes(canonical)) continue;
+    const pattern = new RegExp("\\b" + candidate.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "i");
+    if (pattern.test(allText)) {
+      merged.supportPersonActions.push(canonical);
     }
   }
 
@@ -1420,23 +1596,31 @@ function buildTranscriptChunk(activities) {
 }
 
 function buildTranscriptPayload(currentActivities, contextLineLimit) {
-  const current = currentActivities.map((activity) => ({
-    id: normalizeString(activity?.id),
-    speaker: getSpeakerLabel(activity),
-    role: normalizeString(activity?.from?.role) || null,
-    text: normalizeString(activity?.text) || ""
-  }));
-
-  const contextLines = getTranscriptContextChunk(contextLineLimit)
+  const recentLines = getTranscriptContextChunk(contextLineLimit)
     .split("\n")
     .filter(Boolean);
+
+  const recentSet = new Set(recentLines);
+  for (const activity of currentActivities) {
+    const text = normalizeString(activity?.text);
+    if (!text) continue;
+    const label = getSpeakerLabel(activity);
+    const line = `${label}: ${text}`;
+    if (!recentSet.has(line)) {
+      recentLines.push(line);
+      recentSet.add(line);
+    }
+  }
 
   return JSON.stringify(
     {
       instructions:
-        "Extract profile fields from this conversation. Prefer explicit user-provided values over bot prompts or examples.",
-      recentContextLines: contextLines,
-      currentActivities: current
+        "Extract resident profile fields from this conversation transcript. " +
+        "Match each user answer to the bot question immediately before it to determine the field. " +
+        "CONTEXT: The user is a family member describing their parent (the resident) to the bot. " +
+        "For free-text fields, capture the user's full answer verbatim. " +
+        "Never extract firstName/lastName from relationship statements like 'I'm their son'.",
+      transcript: recentLines
     },
     null,
     2
@@ -1444,31 +1628,37 @@ function buildTranscriptPayload(currentActivities, contextLineLimit) {
 }
 
 function buildAnonymousPayload(currentActivities, contextLineLimit) {
+  // Build a unified sequential transcript: recent context lines + current new activities merged in order.
+  // This lets GPT clearly see bot-question → user-answer pairs rather than two separate structures.
   const recentLines = getTranscriptContextChunk(contextLineLimit)
     .split("\n")
     .filter(Boolean);
 
-  const anonymousMessages = currentActivities.map((activity) => ({
-    from: {
-      id: normalizeString(activity?.from?.id),
-      name: normalizeString(activity?.from?.name)
-    },
-    conversation: {
-      id: normalizeString(activity?.conversation?.id)
-    },
-    textFormat: normalizeString(activity?.textFormat) || "plain",
-    locale: normalizeString(activity?.locale),
-    text: normalizeString(activity?.text),
-    attachments: Array.isArray(activity?.attachments) ? activity.attachments : [],
-    entities: Array.isArray(activity?.entities) ? activity.entities : []
-  }));
+  // Append the current batch if not already in recentLines (dedup by content)
+  const recentSet = new Set(recentLines);
+  for (const activity of currentActivities) {
+    const text = normalizeString(activity?.text);
+    if (!text) continue;
+    const label = isUserActivity(activity) ? "user" : `bot`;
+    const line = `${label}: ${text}`;
+    if (!recentSet.has(line)) {
+      recentLines.push(line);
+      recentSet.add(line);
+    }
+  }
 
   return JSON.stringify(
     {
       instructions:
-        "Extract profile fields from anonymous user messages only. Ignore bot prompts and confirmations.",
-      recentContextLines: recentLines,
-      anonymousMessages
+        "You are extracting resident profile fields from a conversation transcript. " +
+        "The transcript contains alternating bot questions and user answers. " +
+        "CONTEXT: The USER is a family member (son/daughter) describing their PARENT (the resident) to the bot. " +
+        "Match each user answer to the bot question immediately preceding it to determine which field it belongs to. " +
+        "For free-text fields like importantThingsRightNow and favouriteSongOrMusic: " +
+        "the user answers in third person (e.g. 'My father loves his family', 'He likes classical music') — " +
+        "capture the full answer text exactly as given. " +
+        "Never extract firstName/lastName from relationship statements like 'I am their son'.",
+      transcript: recentLines
     },
     null,
     2

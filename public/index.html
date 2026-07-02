@@ -1,203 +1,505 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Druid</title>
-    <link rel="icon" type="image/png" href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQsqXR57vGEZqBmh5sv55gyElCgpUYMDoe0EQ&s" />
-    <link rel="stylesheet" href="./styles.css" />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-    />
-  </head>
-  <body>
-    <main class="page">
-      <aside class="sidebar-left" aria-label="Community sidebar">
-        <div class="orbit-container" aria-hidden="true">
-          <div class="orbit-ring ring-1"></div>
-          <div class="orbit-ring ring-2"></div>
-          <div class="orbit-ring ring-3"></div>
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=1350">
+<title>eCase</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,900;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ecase-teal:#007BA7;
+    --ecase-purple:#9966CC;
+    --ecase-red:#C0392B;
+    --ecase-red-dark:#A93226;
+    --env-orange:#B56000;
+    --grey-line:#9D9C98;
+    --grey-bg:#F4F4F4;
+    --panel-border:#D9D9D9;
+    --text:#333333;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Montserrat',Arial,sans-serif;
+    font-size:13px;
+    color:var(--text);
+    background:#FFFFFF;
+  }
 
-          <img src="https://i.pravatar.cc/88?img=12" class="avatar pos-1" alt="User avatar 1" />
-          <img src="https://i.pravatar.cc/88?img=32" class="avatar pos-2" alt="User avatar 2" />
-          <img src="https://i.pravatar.cc/88?img=48" class="avatar pos-3" alt="User avatar 3" />
-          <img src="https://i.pravatar.cc/88?img=65" class="avatar pos-4" alt="User avatar 4" />
-        </div>
-      </aside>
+  /* ===== Top bar ===== */
+  #topMenuBar{
+    display:flex;align-items:center;gap:18px;
+    padding:8px 18px;border-bottom:1px solid #E3E3E3;
+  }
+  #topMenuBar svg{display:block;}
+  .bannerInfo{display:flex;align-items:center;gap:10px;padding-left:16px;border-left:1px solid var(--grey-line);}
+  #BannerClientName{font-weight:900;font-size:15px;color:var(--text);}
+  #BannerClientEnv{background:var(--env-orange);color:#fff;font-weight:600;font-size:11px;padding:2px 8px;border-radius:3px;}
+  #BannerClientDate{font-size:12px;color:#666;}
+  .topBarLinks{margin-left:auto;display:flex;align-items:center;gap:14px;}
+  .topBarLinks a{color:var(--ecase-teal);text-decoration:none;font-weight:500;font-size:13px;}
+  .topBarLinks a:hover{text-decoration:underline;}
+  .topBarLinks .vdiv{width:1px;height:20px;background:var(--grey-line);}
 
-      <section class="content-area">
-        <img class="page-logo" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQsqXR57vGEZqBmh5sv55gyElCgpUYMDoe0EQ&s" alt=" AI logo" />
-        <section class="card">
-          <h1>Druid New Employee Onboarding Form</h1>
+  /* ===== Session / nav strip ===== */
+  .nav_top{
+    background:var(--grey-bg);border-bottom:1px solid #E0E0E0;
+    padding:6px 18px;display:flex;align-items:center;gap:24px;font-size:12px;color:#555;
+  }
+  .nav_top b{font-weight:600;color:var(--text);}
+  .nav_top a{color:var(--ecase-teal);text-decoration:none;font-weight:500;}
+  .nav_top .timer{color:var(--ecase-red);font-weight:600;}
 
-          <form id="profileForm">
-            <div class="field">
-              <label for="name">Full Name</label>
-              <input id="name" name="name" type="text" placeholder="Your full name" />
-            </div>
+  /* ===== Breadcrumb ===== */
+  .pagename{padding:14px 22px 6px 22px;font-size:13px;font-weight:400;margin:0;}
+  .breadcrumbnew a{color:var(--ecase-teal);text-decoration:underline;}
+  .breadcrumbnew span.sep{color:#888;margin:0 6px;}
 
-            <div class="field">
-              <label for="email">Email</label>
-              <input id="email" name="email" type="email" placeholder="you@example.com" />
-            </div>
+  /* ===== Form main ===== */
+  .formMain{margin:8px 22px 30px 22px;}
+  .formTitle{font-size:18px;font-weight:600;padding:5px 0 20px 0;color:var(--text);}
 
-            <div class="field">
-              <label for="dob">Date of Birth</label>
-              <input id="dob" name="dob" type="date" />
-            </div>
+  .floatBox{
+    display:flex;gap:22px;align-items:flex-start;
+    border:1px solid var(--panel-border);background:#FBFBFB;
+    padding:16px;border-radius:4px;margin-bottom:18px;flex-wrap:wrap;
+  }
+  .formResPhoto .photoPh{
+    width:110px;height:130px;border-radius:3px;
+    background:linear-gradient(180deg,#E8EEF1 0%,#CBD8DE 100%);
+    display:flex;align-items:center;justify-content:center;color:#7A8B93;font-size:34px;font-weight:600;
+  }
+  .formResPhoto img.photoImg{
+    width:110px;height:130px;border-radius:3px;
+    object-fit:cover;display:block;border:1px solid var(--panel-border);
+  }
+  .formResContent table{border-collapse:collapse;}
+  .formLabel{font-weight:600;padding:3px 14px 3px 0;color:#555;white-space:nowrap;vertical-align:top;}
+  .formInput{padding:3px 0;}
+  .carersNote{
+    flex-basis:100%;border:1px solid var(--ecase-red);color:var(--ecase-red);
+    padding:10px;font-size:12px;background:#fff;border-radius:3px;
+  }
 
-            <fieldset class="field">
-              <legend>Gender</legend>
-              <div class="radio-row">
-                <label><input type="radio" name="gender" value="male" /> Male</label>
-                <label><input type="radio" name="gender" value="female" /> Female</label>
-                <label><input type="radio" name="gender" value="non-binary" /> Non-binary</label>
-                <label><input type="radio" name="gender" value="prefer-not-to-say" /> Prefer not to say</label>
-              </div>
-            </fieldset>
+  /* ===== Section pattern (user schema) ===== */
+  .section-header{
+    background:var(--ecase-teal);color:#fff;font-weight:600;font-size:14px;
+    padding:9px 14px;letter-spacing:.2px;
+    border:1px solid var(--panel-border);border-bottom:none;
+    border-radius:4px 4px 0 0;margin-top:16px;
+  }
+  .section-body{
+    border:1px solid var(--panel-border);border-top:none;
+    background:#fff;padding:14px 16px 18px 16px;
+  }
+  .section-body:last-of-type,
+  .section-body.section-end{border-radius:0 0 4px 4px;}
 
-            <fieldset class="field">
-              <legend>Relationship Status</legend>
-              <div class="radio-row">
-                <label><input type="radio" name="relationshipStatus" value="single" /> Single</label>
-                <label><input type="radio" name="relationshipStatus" value="married" /> Married</label>
-                <label><input type="radio" name="relationshipStatus" value="in-a-relationship" /> In a relationship</label>
-                <label><input type="radio" name="relationshipStatus" value="divorced" /> Divorced</label>
-                <label><input type="radio" name="relationshipStatus" value="widowed" /> Widowed</label>
-                <label><input type="radio" name="relationshipStatus" value="prefer-not-to-say" /> Prefer not to say</label>
-              </div>
-            </fieldset>
+  .describe-label{font-weight:600;margin:6px 0 10px 0;}
+  .q-hint{font-weight:400;color:#666;}
 
-            <div class="field">
-              <label for="uploadedImagePreview">Uploaded Image</label>
-              <div class="uploaded-image-wrap">
-                <img
-                  id="uploadedImagePreview"
-                  class="uploaded-image-preview"
-                  alt="Uploaded image preview from chat"
-                  hidden
-                />
-                <p id="uploadedImageHint" class="uploaded-image-hint">
-                  Waiting for image upload from User.
-                </p>
-              </div>
-            </div>
+  /* Trait grid: 5 columns, column-major to honour col groupings */
+  .trait-grid{
+    display:grid;
+    grid-template-rows:repeat(6,auto);
+    grid-auto-flow:column;
+    grid-template-columns:repeat(5,1fr);
+    gap:4px 10px;
+    margin-bottom:6px;
+  }
+  .trait-grid label{display:flex;align-items:center;gap:6px;font-size:12.5px;}
 
-            <div class="field">
-              <label>Passport Details</label>
-              <div class="ocr-grid">
-                <div class="ocr-item">
-                  <label for="ocrName">Passport Name</label>
-                  <input id="ocrName" type="text" readonly placeholder="Waiting for OCR result" />
-                </div>
-                <div class="ocr-item">
-                  <label for="ocrPassportId">Passport ID</label>
-                  <input id="ocrPassportId" type="text" readonly placeholder="Waiting for OCR result" />
-                </div>
-              </div>
-            </div>
+  .checkbox-list label{display:flex;align-items:center;gap:6px;padding:3px 0;font-size:12.5px;}
+  .coping-grid,.support-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:4px 18px;margin-top:6px;
+  }
+  .coping-grid label,.support-grid label{display:flex;align-items:center;gap:6px;font-size:12.5px;flex-wrap:wrap;}
+  .other-row{display:flex;align-items:center;gap:6px;margin:4px 0 0 0;font-size:12.5px;}
 
-           <fieldset class="field">
-  <legend>Work Arrangement</legend>
+  .form-question{margin:16px 0 4px 0;}
+  .form-question > label{display:block;font-weight:600;margin-bottom:6px;}
 
-  <div class="hero-card-grid">
+  input[type=checkbox],input[type=radio]{accent-color:var(--ecase-teal);width:14px;height:14px;}
+  input[type=text],.inline-text-input{
+    border:1px solid #BFBFBF;border-radius:2px;padding:4px 6px;font-family:inherit;font-size:12px;width:220px;
+  }
+  .inline-text-input{width:160px;}
+  textarea{
+    width:620px;max-width:100%;border:1px solid #BFBFBF;border-radius:2px;
+    padding:6px;font-family:inherit;font-size:12px;resize:vertical;
+  }
+  select{
+    border:1px solid #BFBFBF;border-radius:2px;padding:4px 6px;font-family:inherit;font-size:12px;background:#fff;
+  }
+  .rd-group label{display:flex;align-items:center;gap:6px;padding:3px 0;font-size:12.5px;}
+  .inline-q{display:flex;align-items:center;gap:8px;margin:10px 0;flex-wrap:wrap;}
+  .inline-q > label{font-weight:600;}
+  .kv-row{display:flex;align-items:center;gap:8px;margin:8px 0;font-size:12.5px;}
+  .kv-row .k{font-weight:600;min-width:230px;}
 
-    <label class="hero-card-option">
-      <input type="radio" name="workArrangement" value="fully-remote" />
-      <span class="hero-card-content">
-        <span class="hero-card-text">
-          <span class="hero-card-title">Fully Remote</span>
-          <span class="hero-card-description">
-            Work entirely from a remote location with no regular office attendance required.
-            Best suited for employees who are fully equipped to collaborate virtually and work independently.
-          </span>
-        </span>
-      </span>
-    </label>
+  /* ===== Buttons ===== */
+  .redButton{
+    background:var(--ecase-red);color:#fff;border:none;border-radius:3px;
+    padding:8px 16px;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;
+  }
+  .redButton:hover{background:var(--ecase-red-dark);}
+  .buttonRow{margin:24px 0 10px 0;display:flex;gap:10px;flex-wrap:wrap;}
 
-    <label class="hero-card-option">
-      <input type="radio" name="workArrangement" value="hybrid" />
-      <span class="hero-card-content">
-        <span class="hero-card-text">
-          <span class="hero-card-title">Hybrid</span>
-          <span class="hero-card-description">
-            Split your time between working remotely and attending the office on selected days.
-            Provides flexibility while maintaining in-person collaboration with your team.
-          </span>
-        </span>
-      </span>
-    </label>
+  /* ===== Footer ===== */
+  .footer{
+    border-top:1px solid #E3E3E3;background:var(--grey-bg);
+    padding:12px 18px;font-size:12px;color:#666;text-align:center;
+  }
+  .footer a{color:var(--ecase-teal);text-decoration:none;font-weight:500;}
+</style>
+</head>
+<body>
 
-    <label class="hero-card-option">
-      <input type="radio" name="workArrangement" value="office-based" />
-      <span class="hero-card-content">
-        <span class="hero-card-text">
-          <span class="hero-card-title">Mostly Office Based</span>
-          <span class="hero-card-description">
-            Primarily work from the office during standard business hours.
-            Ideal for roles requiring regular face-to-face collaboration or on-site access.
-          </span>
-        </span>
-      </span>
-    </label>
-
-    <label class="hero-card-option">
-      <input type="radio" name="workArrangement" value="temporary-work-from-home" />
-      <span class="hero-card-content">
-        <span class="hero-card-text">
-          <span class="hero-card-title">Temporary Work From Home</span>
-          <span class="hero-card-description">
-            Request a short-term remote working arrangement for temporary personal or business needs.
-            Subject to manager approval and company policy requirements.
-          </span>
-        </span>
-      </span>
-    </label>
-
-    <label class="hero-card-option">
-      <input type="radio" name="workArrangement" value="international-remote-work" />
-      <span class="hero-card-content">
-        <span class="hero-card-text">
-          <span class="hero-card-title">International Remote Work</span>
-          <span class="hero-card-description">
-            Work remotely while located in another country or region outside your primary office location.
-            May require additional compliance, tax, payroll, or visa assessments before approval.
-          </span>
-        </span>
-      </span>
-    </label>
-
-    <label class="hero-card-option">
-      <input type="radio" name="workArrangement" value="flexible-hours-only" />
-      <span class="hero-card-content">
-        <span class="hero-card-text">
-          <span class="hero-card-title">Flexible Hours Only</span>
-          <span class="hero-card-description">
-            Maintain your primary work location while adjusting your working hours for greater flexibility.
-            Suitable for employees balancing personal commitments or non-standard schedules.
-          </span>
-        </span>
-      </span>
-    </label>
-
+<!-- ===== Top menu bar ===== -->
+<div id="topMenuBar">
+  <a href="#" aria-label="eCase home">
+    <svg xmlns="http://www.w3.org/2000/svg" width="166" height="48" viewBox="0 0 238 69" fill="none">
+      <g>
+        <path d="M113.828 38.7841C112.971 39.7561 111.734 40.3484 110.429 40.3484H94.6714C95.8618 42.8846 98.444 44.7133 101.423 44.7133C103.298 44.7133 105.046 44.006 106.323 42.8845C106.915 42.3555 107.668 42.1369 108.376 42.1369C109.238 42.1369 110.118 42.4647 110.693 43.1491C111.838 44.4488 111.665 46.3869 110.383 47.514C108.002 49.5614 104.868 50.8611 101.423 50.8611C93.9238 50.8611 87.8105 44.7766 87.8105 37.2889C87.8105 29.8012 93.9238 23.6477 101.423 23.6477C108.221 23.6477 113.828 28.605 114.909 35.1323C115.127 36.4723 114.69 37.7777 113.828 38.7899V38.7841ZM108.226 34.1604C107.036 31.6243 104.454 29.8415 101.429 29.8415C98.4037 29.8415 95.8676 31.63 94.6771 34.1604H108.226Z" fill="#007BA7"/>
+        <path d="M152.054 41.4295C148.764 47.0941 142.605 50.861 135.612 50.861C125.088 50.861 116.548 42.3554 116.548 31.8427C116.548 21.33 125.088 12.7611 135.612 12.7611C142.605 12.7611 148.764 16.597 152.054 22.2386C152.934 23.6936 152.451 25.5857 150.996 26.4483C150.513 26.7129 149.955 26.8911 149.426 26.8911C148.385 26.8911 147.373 26.3391 146.78 25.3269C144.509 21.491 140.357 18.9606 135.612 18.9606C128.487 18.9606 122.701 24.7345 122.701 31.8542C122.701 38.9738 128.481 44.7247 135.612 44.7247C140.357 44.7247 144.503 42.1483 146.78 38.3125C147.373 37.3406 148.391 36.8172 149.426 36.8172C149.955 36.8172 150.507 36.9725 150.996 37.237C152.451 38.0997 152.94 39.9917 152.054 41.4467V41.4295Z" fill="#007BA7"/>
+        <path d="M180.826 37.2888V47.8014C180.826 49.452 179.412 50.8667 177.692 50.8667C176.277 50.8667 175.087 49.8948 174.713 48.5951C172.574 50.004 169.969 50.8667 167.162 50.8667C159.663 50.8667 153.567 44.7822 153.567 37.2945C153.567 29.8068 159.657 23.6534 167.162 23.6534C174.667 23.6534 180.82 29.7378 180.82 37.2945L180.826 37.2888ZM174.604 37.2888C174.604 33.1884 171.268 29.8413 167.168 29.8413C163.062 29.8413 159.709 33.1941 159.709 37.2888C159.709 41.3834 163.062 44.7132 167.168 44.7132C171.274 44.7132 174.604 41.3834 174.604 37.2888Z" fill="#007BA7"/>
+        <path d="M206.009 42.62C206.009 46.9849 202.346 50.6425 197.975 50.6425H186.41C184.731 50.6425 183.345 49.2565 183.345 47.5773C183.345 45.898 184.731 44.4488 186.41 44.4488H197.975C198.458 44.4488 198.947 44.2935 199.258 43.9197C199.632 43.5861 199.81 43.1031 199.81 42.62C199.81 41.6941 199.148 40.9867 198.286 40.9005C195.594 40.5037 192.127 40.0838 189.435 39.756C185.507 39.273 182.528 35.9432 182.528 31.9578C182.528 27.4836 186.146 23.9123 190.585 23.9123H201.265C202.984 23.9123 204.399 25.258 204.399 27.0005C204.399 28.743 202.984 30.06 201.265 30.06H190.585C189.544 30.06 188.688 30.9226 188.688 31.9578C188.688 32.8147 189.326 33.5623 190.258 33.6773L199.039 34.7527C203.036 35.2358 206.015 38.6346 206.015 42.62H206.009Z" fill="#007BA7"/>
+        <path d="M233.039 38.7841C232.176 39.7561 230.922 40.3484 229.64 40.3484H213.859C215.05 42.8846 217.655 44.7133 220.611 44.7133C222.509 44.7133 224.234 44.006 225.534 42.8845C226.132 42.3555 226.879 42.1369 227.587 42.1369C228.444 42.1369 229.306 42.4647 229.904 43.1491C231.026 44.4488 230.876 46.3869 229.571 47.514C227.207 49.5614 224.073 50.8611 220.611 50.8611C213.112 50.8611 207.021 44.7766 207.021 37.2889C207.021 29.8012 213.112 23.6477 220.611 23.6477C227.408 23.6477 233.039 28.605 234.114 35.1323C234.315 36.4723 233.896 37.7777 233.033 38.7899L233.039 38.7841ZM227.408 34.1604C226.235 31.6243 223.636 29.8415 220.611 29.8415C217.586 29.8415 215.05 31.63 213.859 34.1604H227.408Z" fill="#007BA7"/>
+        <path d="M49.7912 21.6866L43.7642 15.6482L43.7412 15.6712L35.3104 7.29785C30.8994 3.50799 25.137 1.6792 19.2481 2.22554C9.22999 3.19744 1.17296 11.22 0.0917853 21.3761C-0.50631 27.8344 1.74805 34.1144 6.29127 38.6748L25.8674 58.1762C27.3454 59.6542 29.7263 59.6312 31.187 58.1532C32.6477 56.6982 32.6247 54.3173 31.164 52.8624L11.6109 33.3667C8.6319 30.4108 7.17691 26.2931 7.57373 22.1467C8.25809 15.5562 13.4857 10.3171 19.9785 9.69598C20.4213 9.64997 20.8813 9.62697 21.3242 9.62697C25.0565 9.62697 28.6048 11.0819 31.233 13.7274L38.0306 20.4962L37.9846 20.5422L44.4716 27.0005C45.3975 27.9264 45.9093 29.1801 45.9093 30.4798C45.9093 31.7795 45.4032 33.0332 44.4716 33.9821C43.5227 34.908 42.2863 35.4141 40.9635 35.4141C39.6408 35.4141 38.3986 34.908 37.4727 33.9821L30.4106 26.9085L30.3876 26.9315L25.4476 21.9972C23.9696 20.5422 21.606 20.5422 20.128 21.9972C18.673 23.4694 18.673 25.8503 20.128 27.3053L27.7882 34.954L32.1589 39.2959C34.5858 41.7401 37.7833 42.9535 40.9635 42.9535C44.1438 42.9535 47.3643 41.7401 49.7912 39.2959C54.668 34.4249 54.668 26.5347 49.7912 21.6866Z" fill="#007BA7"/>
+        <path d="M77.9251 19.3459C77.3961 12.1285 73.2209 5.9693 67.1882 2.65677C67.0272 2.536 66.8604 2.42098 66.6821 2.32322C62.7427 0.224132 58.8206 -0.189934 55.5368 0.0688577C53.5873 0.183876 51.678 0.551935 49.8549 1.16728C49.6709 1.23054 49.4984 1.31106 49.3316 1.39732C48.0836 1.84014 47.313 2.23695 47.2038 2.29446C45.375 3.25487 44.6676 5.50347 45.6165 7.34377C46.5654 9.17831 48.8255 9.90292 50.6716 8.96552C50.8383 8.87926 53.4895 7.56805 56.9631 7.51054C57.3771 7.51054 57.7969 7.5278 58.2168 7.5623C64.8131 8.20065 69.9544 13.3765 70.4375 19.967C70.8343 24.1767 69.3563 28.3001 66.4003 31.2503L36.1447 62.1672C34.6898 63.6222 34.7128 65.9801 36.1677 67.4351C37.6457 68.9131 40.0324 68.8901 41.5046 67.3891L71.7142 36.5584C76.2574 31.9979 78.529 25.6949 77.9136 19.3459H77.9251Z" fill="#9966CC"/>
+      </g>
+    </svg>
+  </a>
+  <div class="bannerInfo">
+    <span id="BannerClientName">PRX</span>
+    <span id="BannerClientEnv">UAT</span>
+    <span id="BannerClientDate">18-06-2025</span>
   </div>
-</fieldset>
-          </form>
-        </section>
-      </section>
-    </main>
-    <script defer src="./app.js"></script>
-    <!--script
-      defer
-      type="text/javascript"
-      src="https://Agents.community.druidplatform.com/v2/druid_webchat_v2_load.js?botId=47371448-a170-4de9-cbac-08de9ed49c21&baseUrl=https%3A%2F%2Fdruidapi.comm.eu.druidplatform.com"
-    ></script-->
-	<script
+  <div class="topBarLinks">
+    <a href="#">Search</a>
+    <span class="vdiv"></span>
+    <a href="#">Work Log</a>
+  </div>
+</div>
+
+<!-- ===== Session strip ===== -->
+<div class="nav_top">
+  <span>Logged in as: <b>Svcuipathdm01</b> (<span class="timer">28:47</span>) <a href="#">Logout</a></span>
+  <span><b>HM</b></span>
+  <span>Access to Facilities: <b>ALL</b></span>
+  <span style="margin-left:auto"><a href="#">MB</a> &nbsp; <a href="#">POC</a></span>
+</div>
+
+<!-- ===== Breadcrumb ===== -->
+<h1 class="pagename">
+  <span class="breadcrumbnew">
+    <a href="#">John Doe</a><span class="sep">&gt;</span><a href="#">Assessment</a><span class="sep">&gt;</span><a href="#">About Me</a>
+  </span>
+</h1>
+
+<!-- ===== Form ===== -->
+<div class="formMain">
+  <div class="formTitle">About Me</div>
+
+  <div class="floatBox">
+    <div class="formResPhoto"><img class="photoImg" src="https://i.postimg.cc/4xcD8QqC/johndoe.png" alt="John Doe"></div>
+    <div class="formResContent">
+      <table>
+        <tr><td class="formLabel">First Name:</td><td class="formInput">John</td></tr>
+        <tr><td class="formLabel">Last Name:</td><td class="formInput">Doe</td></tr>
+        <tr><td class="formLabel">Date Of Birth:</td><td class="formInput">9 Jul 1938</td></tr>
+        <tr><td class="formLabel">Facility:</td><td class="formInput">PRX</td></tr>
+        <tr><td class="formLabel">WRB:</td><td class="formInput">Wing/21/21</td></tr>
+      </table>
+    </div>
+    <div class="carersNote">
+      Carers Please Note: The Leisure, Life History and About Me assessments contain a number of
+      non-compulsory questions. Each resident should be treated individually and in close liaison with
+      families and guardians should accompany consent for what may sometimes be perceived as intrusive.
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════
+       BEGIN: user-supplied markup (retained verbatim)
+  ════════════════════════════════════ -->
+  <div class="section-header">About Me</div>
+          <div class="section-body">
+            <p class="describe-label">Choose 4–6 words that your friends and family would use to describe you</p>
+            <div class="trait-grid" id="traitGrid">
+              <!-- col 1 -->
+              <label><input type="checkbox" name="personalityTraits" value="affectionate" /> Affectionate</label>
+              <label><input type="checkbox" name="personalityTraits" value="creative" /> Creative</label>
+              <label><input type="checkbox" name="personalityTraits" value="friendly" /> Friendly</label>
+              <label><input type="checkbox" name="personalityTraits" value="happy" /> Happy</label>
+              <label><input type="checkbox" name="personalityTraits" value="kind" /> Kind</label>
+              <label><input type="checkbox" name="personalityTraits" value="passionate" /> Passionate</label>
+              <!-- col 2 -->
+              <label><input type="checkbox" name="personalityTraits" value="anxious" /> Anxious</label>
+              <label><input type="checkbox" name="personalityTraits" value="curious" /> Curious</label>
+              <label><input type="checkbox" name="personalityTraits" value="fun-loving" /> Fun-loving</label>
+              <label><input type="checkbox" name="personalityTraits" value="hard working" /> Hard working</label>
+              <label><input type="checkbox" name="personalityTraits" value="loving" /> Loving</label>
+              <label><input type="checkbox" name="personalityTraits" value="perceptive" /> Perceptive</label>
+              <!-- col 3 -->
+              <label><input type="checkbox" name="personalityTraits" value="caring" /> Caring</label>
+              <label><input type="checkbox" name="personalityTraits" value="determined" /> Determined</label>
+              <label><input type="checkbox" name="personalityTraits" value="funny" /> Funny</label>
+              <label><input type="checkbox" name="personalityTraits" value="homebody" /> Homebody</label>
+              <label><input type="checkbox" name="personalityTraits" value="a nurturer" /> A Nurturer</label>
+              <label><input type="checkbox" name="personalityTraits" value="perfectionist" /> Perfectionist</label>
+              <!-- col 4 -->
+              <label><input type="checkbox" name="personalityTraits" value="confident" /> Confident</label>
+              <label><input type="checkbox" name="personalityTraits" value="dependable" /> Dependable</label>
+              <label><input type="checkbox" name="personalityTraits" value="generous" /> Generous</label>
+              <label><input type="checkbox" name="personalityTraits" value="intelligent" /> Intelligent</label>
+              <label><input type="checkbox" name="personalityTraits" value="outgoing" /> Outgoing</label>
+              <label><input type="checkbox" name="personalityTraits" value="popular" /> Popular</label>
+              <!-- col 5 -->
+              <label><input type="checkbox" name="personalityTraits" value="content" /> Content</label>
+              <label><input type="checkbox" name="personalityTraits" value="easy-going" /> Easy-going</label>
+              <label><input type="checkbox" name="personalityTraits" value="good listener" /> Good listener</label>
+              <label><input type="checkbox" name="personalityTraits" value="insecure" /> Insecure</label>
+              <label><input type="checkbox" name="personalityTraits" value="outspoken" /> Outspoken</label>
+              <label><input type="checkbox" name="personalityTraits" value="proud" /> Proud</label>
+            </div>
+          </div>
+
+          <!-- ════════════════════════════════════
+               SECTION: Life History / Important Things
+          ════════════════════════════════════ -->
+          <div class="section-body section-end" style="border-top: 1px solid #ddd;">
+            <div class="form-question">
+              <label for="importantThingsRightNow">
+                What are the most important things to you in your life right now?
+                <span class="q-hint">(family, friends, faith, pets, sentimental objects, memories, cherished routines etc.)</span>
+              </label>
+              <textarea id="importantThingsRightNow" name="importantThingsRightNow" rows="3"></textarea>
+            </div>
+
+            <div class="form-question">
+              <label for="favouriteSongOrMusic">What is your favourite song or piece of music?</label>
+              <textarea id="favouriteSongOrMusic" name="favouriteSongOrMusic" rows="3"></textarea>
+            </div>
+          </div>
+
+          <!-- ════════════════════════════════════
+               SECTION: Worries and Coping
+          ════════════════════════════════════ -->
+          <div class="section-header">Worries and Coping</div>
+          <div class="section-body">
+
+            <p style="font-size:12.5px; margin-bottom:4px;">What types of things do you tend to worry about?</p>
+            <div class="checkbox-list" id="worryList">
+              <label><input type="checkbox" name="worryTypes" value="my own health" /> My own health</label>
+              <label><input type="checkbox" name="worryTypes" value="the health of loved ones" /> The health of loved ones</label>
+              <label><input type="checkbox" name="worryTypes" value="finances" /> Finances</label>
+              <label><input type="checkbox" name="worryTypes" value="feeling lonely" /> Feeling lonely</label>
+              <label><input type="checkbox" name="worryTypes" value="family issues" /> Family Issues</label>
+              <label><input type="checkbox" name="worryTypes" value="relationships in my life" /> Relationships in my life</label>
+            </div>
+            <div class="other-row">
+              <input type="checkbox" name="worryTypes" value="other" id="worryOtherCheck" />
+              <label for="worryOtherCheck">Other</label>
+              <input type="text" id="worryOtherText" placeholder="" style="width:160px;" />
+            </div>
+
+            <div class="form-question">
+              <label for="worriedOrUpsetDetails">Are you worried or upset about anything at the moment?</label>
+              <textarea id="worriedOrUpsetDetails" name="worriedOrUpsetDetails" rows="3"></textarea>
+            </div>
+
+            <div class="form-question">
+              <label>How do you usually cope with feeling worried or upset?</label>
+              <div class="coping-grid" id="copingList">
+                <label><input type="checkbox" name="copingStrategies" value="look on the bright side" /> Look on the bright side</label>
+                <label><input type="checkbox" name="copingStrategies" value="my faith/spiritual beliefs helps me" /> My faith/spiritual beliefs helps me</label>
+                <label><input type="checkbox" name="copingStrategies" value="spend time with people i am close to" /> Spend time with people I am close to</label>
+                <label><input type="checkbox" name="copingStrategies" value="i try to keep busy" /> I try to keep busy</label>
+                <label><input type="checkbox" name="copingStrategies" value="spend time alone" /> Spend time alone</label>
+                <label><input type="checkbox" name="copingStrategies" value="i like to work on solutions to things" /> I like to work on solutions to things</label>
+                <label>
+                  <input type="checkbox" name="copingStrategies" value="i distract myself with" id="copingDistractCheck" />
+                  I distract myself with
+                  <input type="text" class="inline-text-input" id="copingDistractWith" name="copingDistractWith" placeholder="" />
+                </label>
+              </div>
+              <div class="other-row" style="margin-top:6px;">
+                <input type="checkbox" name="copingStrategies" value="other" id="copingOtherCheck" />
+                <label for="copingOtherCheck">Other</label>
+                <input type="text" id="copingOther" name="copingOther" placeholder="" style="width:160px;" />
+              </div>
+            </div>
+
+            <div class="form-question">
+              <label>When I feel worried or upset the person I am closest to</label>
+              <div class="support-grid" id="supportList">
+                <label><input type="checkbox" name="supportPersonActions" value="puts my favourite music on" /> Puts my favourite music on</label>
+                <label><input type="checkbox" name="supportPersonActions" value="holds or hugs me" /> Holds or hugs me</label>
+                <label><input type="checkbox" name="supportPersonActions" value="sits and talks with me" /> Sits and talks with me</label>
+                <label><input type="checkbox" name="supportPersonActions" value="makes me laugh" /> Makes me laugh</label>
+                <label><input type="checkbox" name="supportPersonActions" value="prays with me" /> Prays with me</label>
+                <label><input type="checkbox" name="supportPersonActions" value="gives me a hand massage" /> Gives me a hand massage</label>
+                <label><input type="checkbox" name="supportPersonActions" value="looks through photographs with me" /> Looks through photographs with me</label>
+                <label>
+                  <input type="checkbox" name="supportPersonActions" value="brings me my favourite" id="supportBringsCheck" />
+                  Brings me my favourite
+                  <input type="text" class="inline-text-input" id="supportPersonActionsOther" name="supportPersonActionsOther" placeholder="" />
+                </label>
+              </div>
+              <div class="other-row" style="margin-top:6px;">
+                <input type="checkbox" name="supportPersonActions" value="other" id="supportOtherCheck" />
+                <label for="supportOtherCheck">Other</label>
+                <input type="text" id="supportOtherText" placeholder="" style="width:160px;" />
+              </div>
+            </div>
+
+          </div>
+  <!-- ════════════════════════════════════
+       END: user-supplied markup
+  ════════════════════════════════════ -->
+
+  <!-- ===== Section: Spirituality ===== -->
+  <div class="section-header">Spirituality</div>
+  <div class="section-body">
+    <p class="describe-label">What are some of the important things in life that bring you a sense of comfort; meaning; hope; belonging; community; inspiration; or peace?</p>
+    <div class="checkbox-list">
+      <label><input type="checkbox" name="spiritualityImportant" value="nature" /> Nature</label>
+      <label><input type="checkbox" name="spiritualityImportant" value="prayer/meditation" /> Prayer/meditation</label>
+      <label><input type="checkbox" name="spiritualityImportant" value="music" /> Music</label>
+      <label><input type="checkbox" name="spiritualityImportant" value="reading" /> Reading</label>
+      <label><input type="checkbox" name="spiritualityImportant" value="creativity" /> Creativity</label>
+      <label><input type="checkbox" name="spiritualityImportant" value="church attendance" /> Church attendance</label>
+      <label><input type="checkbox" name="spiritualityImportant" value="pets/animals" /> Pets/animals</label>
+      <label><input type="checkbox" name="spiritualityImportant" value="spending time with friends" /> Spending time with friends</label>
+      <label><input type="checkbox" name="spiritualityImportant" value="spending time with family" /> Spending time with family</label>
+      <label><input type="checkbox" name="spiritualityImportant" value="helping others" /> Helping others</label>
+      <label><input type="checkbox" name="spiritualityImportant" value="talking about my life (reminiscence)" /> Talking about my life (reminiscence)</label>
+    </div>
+    <div class="other-row">
+      <input type="checkbox" name="spiritualityImportant" value="other" id="spiritualityOtherCheck" />
+      <label for="spiritualityOtherCheck">Other</label>
+      <input type="text" id="spiritualityOtherText" style="width:160px;" />
+    </div>
+
+    <div class="form-question">
+      <label>Are there any religious or spiritual customs that are important to you?</label>
+      <div class="checkbox-list">
+        <label><input type="checkbox" name="religiousCustoms" value="religious celebration days" /> Religious celebration days</label>
+        <label><input type="checkbox" name="religiousCustoms" value="clothing" /> Clothing</label>
+        <label><input type="checkbox" name="religiousCustoms" value="food requirements" /> Food requirements</label>
+      </div>
+      <div class="other-row">
+        <input type="checkbox" name="religiousCustoms" value="other" id="religiousOtherCheck" />
+        <label for="religiousOtherCheck">Other</label>
+        <input type="text" id="religiousOtherText" style="width:160px;" />
+      </div>
+    </div>
+
+    <div class="form-question">
+      <label for="religiousCustomsDetails">Please provide further detail on the above (if applicable)</label>
+      <textarea id="religiousCustomsDetails" name="religiousCustomsDetails" rows="3"></textarea>
+    </div>
+  </div>
+
+  <!-- ===== Section: Relationships ===== -->
+  <div class="section-header">Relationships</div>
+  <div class="section-body">
+    <div class="form-question" style="margin-top:4px;">
+      <label for="importantPeople">Who are the most important people in your life right now? <span class="q-hint">(names of close family and friends)</span></label>
+      <textarea id="importantPeople" name="importantPeople" rows="3"></textarea>
+    </div>
+
+    <div class="form-question">
+      <label>How often do you hope to be seeing them</label>
+      <div class="rd-group">
+        <label><input type="radio" name="peopleFrequency" value="daily" /> Daily</label>
+        <label><input type="radio" name="peopleFrequency" value="weekly" /> Weekly</label>
+        <label><input type="radio" name="peopleFrequency" value="2xweekly" /> 2xWeekly</label>
+        <label><input type="radio" name="peopleFrequency" value="monthly" /> Monthly</label>
+        <label><input type="radio" name="peopleFrequency" value="other" id="peopleFreqOther" /> Other
+          <input type="text" class="inline-text-input" id="peopleFrequencyOtherText" name="peopleFrequencyOtherText" />
+        </label>
+      </div>
+    </div>
+
+    <div class="inline-q">
+      <label for="assistanceContact">Do you require assistance keeping in contact with family and friends (phone/mail/email/Skype)?</label>
+      <select id="assistanceContact" name="assistanceContact"><option value=""></option><option value="yes">Yes</option><option value="no">No</option></select>
+    </div>
+
+    <div class="form-question">
+      <label for="contactDetails">Contact details</label>
+      <textarea id="contactDetails" name="contactDetails" rows="3"></textarea>
+    </div>
+
+    <div class="form-question">
+      <label>Do you find making new friends</label>
+      <div class="rd-group">
+        <label><input type="radio" name="makingFriends" value="easy" /> Easy</label>
+        <label><input type="radio" name="makingFriends" value="somewhat easy" /> Somewhat easy</label>
+        <label><input type="radio" name="makingFriends" value="difficult" /> Difficult</label>
+        <label><input type="radio" name="makingFriends" value="very difficult" /> Very difficult</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Section: Food and Drink ===== -->
+  <div class="section-header">Food and Drink</div>
+  <div class="section-body">
+    <div class="kv-row"><span class="k">Favourite alcoholic drink</span><input type="text" id="favAlcoholicDrink" name="favAlcoholicDrink"></div>
+    <div class="kv-row"><span class="k">Favourite non-alcoholic drink</span><input type="text" id="favNonAlcoholicDrink" name="favNonAlcoholicDrink"></div>
+    <div class="kv-row"><span class="k">Favourite snack/treat</span><input type="text" id="favSnackTreat" name="favSnackTreat"></div>
+  </div>
+
+  <!-- ===== Section: Permission ===== -->
+  <div class="section-header">Permission</div>
+  <div class="section-body">
+    <div class="kv-row"><span class="k" style="min-width:430px;">Permission to go on outings with staff?</span>
+      <select id="permissionOuting" name="permissionOuting"><option value=""></option><option value="yes">Yes</option><option value="no">No</option></select></div>
+    <div class="kv-row"><span class="k" style="min-width:430px;">Permission to display name/photo on your door?</span>
+      <select id="permissionDisplayName" name="permissionDisplayName"><option value=""></option><option value="yes">Yes</option><option value="no">No</option></select></div>
+    <div class="kv-row"><span class="k" style="min-width:430px;">Permission to use your photo (newsletters; noticeboards; social media)?</span>
+      <select id="permissionNewsletters" name="permissionNewsletters"><option value=""></option><option value="yes">Yes</option><option value="no">No</option></select></div>
+    <div class="kv-row"><span class="k" style="min-width:430px;">Permission to be included in video footage/media?</span>
+      <select id="permissionVideo" name="permissionVideo"><option value=""></option><option value="yes">Yes</option><option value="no">No</option></select></div>
+    <div class="kv-row"><span class="k" style="min-width:430px;">Permission to display end of life photo?</span>
+      <select id="permissionEndOfLife" name="permissionEndOfLife"><option value=""></option><option value="yes">Yes</option><option value="no">No</option></select></div>
+  </div>
+
+  <!-- ===== Section: Who shared this information ===== -->
+  <div class="section-header">Who shared this information with us?</div>
+  <div class="section-body">
+    <div class="checkbox-list">
+      <label><input type="checkbox" name="sharedBy" value="resident" /> Resident</label>
+    </div>
+    <div class="other-row"><input type="checkbox" name="sharedBy" value="family" id="sharedFamilyCheck" /><label for="sharedFamilyCheck">Family</label><input type="text" id="sharedFamilyText" name="sharedFamilyText" style="width:220px;" /></div>
+    <div class="other-row"><input type="checkbox" name="sharedBy" value="friends" id="sharedFriendsCheck" /><label for="sharedFriendsCheck">Friends</label><input type="text" id="sharedFriendsText" name="sharedFriendsText" style="width:220px;" /></div>
+    <div class="other-row"><input type="checkbox" name="sharedBy" value="other" id="sharedOtherCheck" /><label for="sharedOtherCheck">Other</label><input type="text" id="sharedOtherText" name="sharedOtherText" style="width:220px;" /></div>
+  </div>
+  
+   <script defer src="./app.js"></script>
+    <script
       defer
       type="text/javascript"
       src="https://silverchain-poc.au.druidplatform.com/v2/druid_webchat_v2_load.js?botId=3335a610-a031-4830-97ca-08de5650198e&baseUrl=https%3A%2F%2Fdruidapi.au.druidplatform.com"
     ></script>
-	
-  </body>
+
+  <!-- ===== Action buttons ===== -->
+  <div class="buttonRow">
+    <input value="Print" type="button" class="redButton">
+    <input value="Print With Signature" type="button" class="redButton">
+    <input value="Complete Wizard" type="submit" class="redButton">
+    <input value="Cancel" type="button" class="redButton">
+  </div>
+</div>
+
+<!-- ===== Footer ===== -->
+<div class="footer">
+  <a href="#">Service Desk</a> 1800 810 081 &nbsp;|&nbsp; &copy; 2026 Health Metrics Pty Ltd &nbsp;|&nbsp; Release RAC_2025.1.2 &nbsp;
+  <a href="#">Provide Feedback</a>
+</div>
+
+</body>
 </html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Druid</title>
+    <link rel="icon" type="image/png" href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQsqXR57vGEZqBmh5sv55gyElCgpUYMDoe0EQ&s" />
+    <link rel="stylesheet" href="./styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
+  </head>
+  <body>
+    <main class="page">
+      <aside class="sidebar-left" aria-label="Community sidebar">
+        <div class="orbit-container" aria-hidden="true">
+          <div class="orbit-ring ring-1"></div>
+          <div class="orbit-ring ring-2"></div>
+          <div class="orbit-ring ring-3"></div>
+
+          <img src="https://i.pravatar.cc/88?img=12" class="avatar pos-1" alt="User avatar 1" />
+          <img src="https://i.pravatar.cc/88?img=32" class="avatar pos-2" alt="User avatar 2" />
+          <img src="https://i.pravatar.cc/88?img=48" class="avatar pos-3" alt="User avatar 3" />
+          <img src="https://i.pravatar.cc/88?img=65" class="avatar pos-4" alt="User avatar 4" />
+        </div>
+      </aside>
+
+      <section class="content-area">
+        <img class="page-logo" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQsqXR57vGEZqBmh5sv55gyElCgpUYMDoe0EQ&s" alt=" AI logo" />
+        <section class="card">
+          <h1>Druid New Employee Onboarding Form</h1>
+
+          <form id="profileForm">
+            <div class="field">
+              <label for="name">Full Name</label>
+              <input id="name" name="name" type="text" placeholder="Your full name" />
+            </div>
+
+            <div class="field">
+              <label for="email">Email</label>
+              <input id="email" name="email" type="email" placeholder="you@example.com" />
+            </div>
+
+            <div class="field">
+              <label for="dob">Date of Birth</label>
+              <input id="dob" name="dob" type="date" />
+            </div>
+
+            <fieldset class="field">
+              <legend>Gender</legend>
+              <div class="radio-row">
+                <label><input type="radio" name="gender" value="male" /> Male</label>
+                <label><input type="radio" name="gender" value="female" /> Female</label>
+                <label><input type="radio" name="gender" value="non-binary" /> Non-binary</label>
+                <label><input type="radio" name="gender" value="prefer-not-to-say" /> Prefer not to say</label>
+              </div>
+            </fieldset>
+
+            <fieldset class="field">
+              <legend>Relationship Status</legend>
+              <div class="radio-row">
+                <label><input type="radio" name="relationshipStatus" value="single" /> Single</label>
+                <label><input type="radio" name="relationshipStatus" value="married" /> Married</label>
+                <label><input type="radio" name="relationshipStatus" value="in-a-relationship" /> In a relationship</label>
+                <label><input type="radio" name="relationshipStatus" value="divorced" /> Divorced</label>
+                <label><input type="radio" name="relationshipStatus" value="widowed" /> Widowed</label>
+                <label><input type="radio" name="relationshipStatus" value="prefer-not-to-say" /> Prefer not to say</label>
+              </div>
+            </fieldset>
+
+            <div class="field">
+              <label for="uploadedImagePreview">Uploaded Image</label>
+              <div class="uploaded-image-wrap">
+                <img
+                  id="uploadedImagePreview"
+                  class="uploaded-image-preview"
+                  alt="Uploaded image preview from chat"
+                  hidden
+                />
+                <p id="uploadedImageHint" class="uploaded-image-hint">
+                  Waiting for image upload from User.
+                </p>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Passport Details</label>
+              <div class="ocr-grid">
+                <div class="ocr-item">
+                  <label for="ocrName">Passport Name</label>
+                  <input id="ocrName" type="text" readonly placeholder="Waiting for OCR result" />
+                </div>
+                <div class="ocr-item">
+                  <label for="ocrPassportId">Passport ID</label>
+                  <input id="ocrPassportId" type="text" readonly placeholder="Waiting for OCR result" />
+                </div>
+              </div>
+            </div>
+
+           <fieldset class="field">
+  <legend>Work Arrangement</legend>
+
+  <div class="hero-card-grid">
+
+    <label class="hero-card-option">
+      <input type="radio" name="workArrangement" value="fully-remote" />
+      <span class="hero-card-content">
+        <span class="hero-card-text">
+          <span class="hero-card-title">Fully Remote</span>
+          <span class="hero-card-description">
+            Work entirely from a remote location with no regular office attendance required.
+            Best suited for employees who are fully equipped to collaborate virtually and work independently.
+          </span>
+        </span>
+      </span>
+    </label>
+
+    <label class="hero-card-option">
+      <input type="radio" name="workArrangement" value="hybrid" />
+      <span class="hero-card-content">
+        <span class="hero-card-text">
+          <span class="hero-card-title">Hybrid</span>
+          <span class="hero-card-description">
+            Split your time between working remotely and attending the office on selected days.
+            Provides flexibility while maintaining in-person collaboration with your team.
+          </span>
+        </span>
+      </span>
+    </label>
+
+    <label class="hero-card-option">
+      <input type="radio" name="workArrangement" value="office-based" />
+      <span class="hero-card-content">
+        <span class="hero-card-text">
+          <span class="hero-card-title">Mostly Office Based</span>
+          <span class="hero-card-description">
+            Primarily work from the office during standard business hours.
+            Ideal for roles requiring regular face-to-face collaboration or on-site access.
+          </span>
+        </span>
+      </span>
+    </label>
+
+    <label class="hero-card-option">
+      <input type="radio" name="workArrangement" value="temporary-work-from-home" />
+      <span class="hero-card-content">
+        <span class="hero-card-text">
+          <span class="hero-card-title">Temporary Work From Home</span>
+          <span class="hero-card-description">
+            Request a short-term remote working arrangement for temporary personal or business needs.
+            Subject to manager approval and company policy requirements.
+          </span>
+        </span>
+      </span>
+    </label>
+
+    <label class="hero-card-option">
+      <input type="radio" name="workArrangement" value="international-remote-work" />
+      <span class="hero-card-content">
+        <span class="hero-card-text">
+          <span class="hero-card-title">International Remote Work</span>
+          <span class="hero-card-description">
+            Work remotely while located in another country or region outside your primary office location.
+            May require additional compliance, tax, payroll, or visa assessments before approval.
+          </span>
+        </span>
+      </span>
+    </label>
+
+    <label class="hero-card-option">
+      <input type="radio" name="workArrangement" value="flexible-hours-only" />
+      <span class="hero-card-content">
+        <span class="hero-card-text">
+          <span class="hero-card-title">Flexible Hours Only</span>
+          <span class="hero-card-description">
+            Maintain your primary work location while adjusting your working hours for greater flexibility.
+            Suitable for employees balancing personal commitments or non-standard schedules.
+          </span>
+        </span>
+      </span>
+    </label>
+
+  </div>
+</fieldset>
+          </form>
+        </section>
+      </section>
+    </main>
+    <script defer src="./app.js"></script>
+    <!--script
+      defer
+      type="text/javascript"
+      src="https://Agents.community.druidplatform.com/v2/druid_webchat_v2_load.js?botId=47371448-a170-4de9-cbac-08de9ed49c21&baseUrl=https%3A%2F%2Fdruidapi.comm.eu.druidplatform.com"
+    ></script-->
+	<script
+      defer
+      type="text/javascript"
+      src="https://silverchain-poc.au.druidplatform.com/v2/druid_webchat_v2_load.js?botId=3335a610-a031-4830-97ca-08de5650198e&baseUrl=https%3A%2F%2Fdruidapi.au.druidplatform.com"
+    ></script>
+	
+  </body>
+</html>
